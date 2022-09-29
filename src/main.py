@@ -1,5 +1,3 @@
-
-
 from board.board import Board
 from pieces.bishop import Bishop
 from pieces.king import King
