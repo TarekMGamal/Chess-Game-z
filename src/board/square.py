@@ -7,4 +7,14 @@ class Square:
         self.piece = piece
         self.color = color
 
-    
+    def add_piece(self , piece):
+        self.piece = piece
+
+    def change_piece(self , piece):
+        self.piece = piece
+
+    def get_piece(self):
+        return self.piece
+
+    def get_color(self):
+        return self.color
