@@ -1,10 +1,10 @@
 class Move:
-    def __init__(self , initial , final):
-        self.initial = initial
-        self.final = final
+    def __init__(self , initial_square , final_square):
+        self.initial_square = initial_square
+        self.final_square = final_square
 
-    def get_initail_move(self):
-        return self.initial
+    def get_initail_square(self):
+        return self.initial_square
     
-    def get_final_move(self):
-        return self.final
+    def get_final_square(self):
+        return self.final_square
