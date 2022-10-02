@@ -31,10 +31,9 @@ if __name__ == '__main__':
 
         print()
 
-    square = b.get_square(6 , 0)
+    square = b.get_square(1 , 4)
     lista = b.get_valid_moves(square)
-    
-    move = lista[1]
+    move = lista[0]
     
     b.move_piece(move)
     

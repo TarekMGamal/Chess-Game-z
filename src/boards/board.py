@@ -130,22 +130,41 @@ class Board:
         
         return valid_moves
     
-    def get_king_valid_moves(piece , x , y):
+    def get_king_valid_moves(self , piece , x , y):
+        valid_moves = []
+        squares = self.squares
+        initial_square = squares[x][y]
+        
+        for i in range(-1 , 2):
+            for j in range(-1 , 2):
+                if i == 0 and j == 0:
+                    continue
+                if self.in_board(x+i,y+j) == False:
+                    continue
+                
+                final_square = squares[x+i][y+j]
+                if final_square.get_piece() != None:
+                    if final_square.get_piece().get_color() != piece.get_color():
+                        new_move = Move(initial_square , final_square)
+                        valid_moves.append(new_move)
+                else:
+                    new_move = Move(initial_square , final_square)
+                    valid_moves.append(new_move)
+                
+        return valid_moves
+    
+    def get_queen_valid_moves(self , piece , x , y):
         valid_moves = []
         return valid_moves
     
-    def get_queen_valid_moves(piece , x , y):
+    def get_rook_valid_moves(self , piece , x , y):
         valid_moves = []
         return valid_moves
     
-    def get_rook_valid_moves(piece , x , y):
+    def get_bishop_valid_moves(self , piece , x , y):
         valid_moves = []
         return valid_moves
     
-    def get_bishop_valid_moves(piece , x , y):
-        valid_moves = []
-        return valid_moves
-    
-    def get_knight_valid_moves(piece , x , y):
+    def get_knight_valid_moves(self , piece , x , y):
         valid_moves = []
         return valid_moves
