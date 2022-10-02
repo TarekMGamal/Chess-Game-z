@@ -95,8 +95,39 @@ class Board:
         else:
             return empty_valid_moves
     
-    def get_pawn_valid_moves(piece , x , y):
+    def in_board(self , x , y):
+        return True if x<8 and x>=0 and y<8 and y>=0 else False
+    
+    def get_pawn_valid_moves(self , piece , x , y):
         valid_moves = []
+        squares = self.squares
+        initial_square = squares[x][y]
+        
+        board_direction = 1 if piece.get_color() == 'black' else -1
+        
+        for i in [x+board_direction , x+(board_direction*2)]:
+            if self.in_board(i , y) == False:
+                break
+            
+            final_square = squares[i][y]
+            
+            if final_square.get_piece() != None:
+                break
+            else:
+                new_move = Move(initial_square , final_square)
+                valid_moves.append(new_move)
+                
+        for j in [y-1 , y+1]:
+            if self.in_board(x+board_direction , j) == False:
+                continue
+            
+            final_square = squares[x+board_direction][j]
+            
+            if final_square.get_piece() != None:
+                if final_square.get_piece().get_color() != piece.get_color():
+                    new_move = Move(initial_square , final_square)
+                    valid_moves.append(new_move)
+        
         return valid_moves
     
     def get_king_valid_moves(piece , x , y):

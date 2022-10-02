@@ -6,6 +6,12 @@ class Piece:
         self.value = 0
         self.valid_moves = []
 
+    def get_name(self):
+        return self.name
+    
+    def get_color(self):
+        return self.color
+
     def kill_piece(self):
         self.alive = False
         

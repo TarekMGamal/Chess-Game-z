@@ -31,4 +31,23 @@ if __name__ == '__main__':
 
         print()
 
+    square = b.get_square(6 , 0)
+    lista = b.get_valid_moves(square)
+    
+    move = lista[1]
+    
+    b.move_piece(move)
+    
+    for i in range(8):
+        for j in range(8):
+            square = squares[i][j]
+            piece = square.get_piece()
+            if piece != None:
+                print(piece.name , end=' ')
+            else:
+                print('     ' , end=' ')
+
+
+        print()
+
     print('done')

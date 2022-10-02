@@ -3,7 +3,7 @@ class Move:
         self.initial_square = initial_square
         self.final_square = final_square
 
-    def get_initail_square(self):
+    def get_initial_square(self):
         return self.initial_square
     
     def get_final_square(self):
