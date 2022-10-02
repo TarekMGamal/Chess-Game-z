@@ -1,4 +1,4 @@
-from board.square import Square
+from boards.square import Square
 from pieces.bishop import Bishop
 from pieces.knight import Knight
 from pieces.king import King
@@ -15,23 +15,22 @@ class Board:
                 self.squares[i][j] = Square(i,j,color)
         
         for color in ['black' , 'white']:
-            # pieces_row , pawns_row = 0 , 0
             if color == 'black':
                 pieces_row , pawns_row = 0 , 1
             else:
                 pieces_row , pawns_row = 7 , 6
 
-            self.add_piece(Rook(pieces_row,0,color),pieces_row,0)
-            self.add_piece(Rook(pieces_row,7,color),pieces_row,7)
-            self.add_piece(Knight(pieces_row,1,color),pieces_row,1)
-            self.add_piece(Knight(pieces_row,6,color),pieces_row,6)
-            self.add_piece(Bishop(pieces_row,2,color),pieces_row,2)
-            self.add_piece(Bishop(pieces_row,5,color),pieces_row,5)
-            self.add_piece(Queen(pieces_row,3,color),pieces_row,3)
-            self.add_piece(King(pieces_row,4,color),pieces_row,4)
+            self.add_piece(Rook(color),pieces_row,0)
+            self.add_piece(Rook(color),pieces_row,7)
+            self.add_piece(Knight(color),pieces_row,1)
+            self.add_piece(Knight(color),pieces_row,6)
+            self.add_piece(Bishop(color),pieces_row,2)
+            self.add_piece(Bishop(color),pieces_row,5)
+            self.add_piece(Queen(color),pieces_row,3)
+            self.add_piece(King(color),pieces_row,4)
 
             for j in range(8):
-                self.add_piece(Pawn(pawns_row,j,color),pawns_row,j)
+                self.add_piece(Pawn(color),pawns_row,j)
     
         
     def add_piece(self , piece , x , y):

@@ -1,14 +1,13 @@
 class Piece:
-    def __init__(self , x , y , color):
-        self.x = x
-        self.y = y
+    def __init__(self , color):
         self.color = color
         self.alive = True
         self.name = 'piece'
-
-    def move(self , new_x , new_y):
-        self.x = new_x
-        self.y = new_y
+        self.value = 0
+        self.valid_moves = []
 
     def kill_piece(self):
         self.alive = False
+        
+    def update_valid_moves(self , valid_moves):
+        self.valid_moves = valid_moves

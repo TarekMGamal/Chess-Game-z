@@ -1,4 +1,4 @@
-from board.board import Board
+from boards.board import Board
 from pieces.bishop import Bishop
 from pieces.king import King
 from pieces.knight import Knight
