@@ -1,3 +1,4 @@
+import math
 from boards.square import Square
 from pieces.bishop import Bishop
 from pieces.knight import Knight
@@ -159,6 +160,42 @@ class Board:
     
     def get_rook_valid_moves(self , piece , x , y):
         valid_moves = []
+        squares = self.squares
+        initial_square = squares[x][y]
+        
+        for i in range(-1 , 2):
+            for j in range(-1 , 2):
+                if i == 0 and j == 0:
+                    continue
+                if i != 0 and j != 0:
+                    continue
+                
+                range_end_x = 8 if i == 1 else -1
+                range_end_y = 8 if j == 1 else -1
+                
+                range_start = x if i != 0 else y
+                range_end = range_end_x if i != 0 else range_end_y
+                
+                increment = i if i != 0 else j
+                
+                for indx in range(range_start+increment , range_end , increment):
+                    xx = indx if i != 0 else x
+                    yy = indx if j != 0 else y
+                    if self.in_board(xx , yy) == False:
+                        continue
+                    
+                    final_square = squares[indx][y] if i != 0 else squares[x][indx]
+                        
+                    if final_square.get_piece() != None:
+                        if final_square.get_piece().get_color() != piece.get_color():
+                            move = Move(initial_square , final_square)
+                            valid_moves.append(move)
+                        else:
+                            break
+                    else:
+                        move = Move(initial_square , final_square)
+                        valid_moves.append(move)
+                
         return valid_moves
     
     def get_bishop_valid_moves(self , piece , x , y):
@@ -167,4 +204,23 @@ class Board:
     
     def get_knight_valid_moves(self , piece , x , y):
         valid_moves = []
+        squares = self.squares
+        initial_square = squares[x][y]
+        
+        for i in range(-2 , 3):
+            for j in range(-2 , 3):
+                if abs(i) + abs(j) != 3:
+                    continue
+                if self.in_board(x+i,y+j) == False:
+                    continue
+                
+                final_square = squares[x+i][y+j]
+                if final_square.get_piece() != None:
+                    if final_square.get_piece().get_color() != piece.get_color():
+                        new_move = Move(initial_square , final_square)
+                        valid_moves.append(new_move)
+                else:
+                    new_move = Move(initial_square , final_square)
+                    valid_moves.append(new_move)
+        
         return valid_moves

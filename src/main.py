@@ -31,11 +31,13 @@ if __name__ == '__main__':
 
         print()
 
-    square = b.get_square(1 , 4)
+    square = b.get_square(0 , 0)
     lista = b.get_valid_moves(square)
-    move = lista[0]
+    print(lista)
+    print(len(lista))
     
-    b.move_piece(move)
+    #move = lista[8]
+    #b.move_piece(move)
     
     for i in range(8):
         for j in range(8):
