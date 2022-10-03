@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
         print()
 
-    square = b.get_square(0 , 2)
+    square = b.get_square(0 , 3)
     lista = b.get_valid_moves(square)
     print(lista)
     print(len(lista))

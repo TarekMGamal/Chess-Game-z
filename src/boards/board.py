@@ -156,6 +156,12 @@ class Board:
     
     def get_queen_valid_moves(self , piece , x , y):
         valid_moves = []
+        
+        rook_moves = self.get_rook_valid_moves(piece , x , y)
+        bishop_moves = self.get_bishop_valid_moves(piece , x , y)
+        
+        valid_moves = rook_moves + bishop_moves
+        
         return valid_moves
     
     def get_rook_valid_moves(self , piece , x , y):
