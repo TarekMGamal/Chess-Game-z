@@ -190,8 +190,7 @@ class Board:
                         if final_square.get_piece().get_color() != piece.get_color():
                             move = Move(initial_square , final_square)
                             valid_moves.append(move)
-                        else:
-                            break
+                        break
                     else:
                         move = Move(initial_square , final_square)
                         valid_moves.append(move)
@@ -200,6 +199,32 @@ class Board:
     
     def get_bishop_valid_moves(self , piece , x , y):
         valid_moves = []
+        squares = self.squares
+        initial_square = squares[x][y]
+        
+        for i in range(-1 , 2):
+            for j in range(-1 , 2):
+                if i == 0 or j == 0:
+                    continue
+                
+                range_end_x = 8 if i == 1 else -1
+                range_end_y = 8 if j == 1 else -1
+                
+                for indx_x , indx_y in zip(range(x+i , range_end_x , i) , range(y+j , range_end_y , j)):
+                    if self.in_board(indx_x , indx_y) == False:
+                        continue
+                    
+                    final_square = squares[indx_x][indx_y]
+                    
+                    if final_square.get_piece() != None:
+                        if final_square.get_piece().get_color() != piece.get_color():
+                            move = Move(initial_square , final_square)
+                            valid_moves.append(move)
+                        break
+                    else:
+                        move = Move(initial_square , final_square)
+                        valid_moves.append(move)
+                        
         return valid_moves
     
     def get_knight_valid_moves(self , piece , x , y):
