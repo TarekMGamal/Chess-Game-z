@@ -1,7 +1,6 @@
-from pieces.piece import Piece
+from piece import Piece
+
 
 class King(Piece):
-    def __init__(self , color):
-        super().__init__(color)
-        self.value = 1000
-        self.name = 'king'
+    def __init__(self, color):
+        super().__init__(color, 1000, 'king')

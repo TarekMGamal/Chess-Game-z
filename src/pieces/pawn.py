@@ -1,7 +1,6 @@
-from pieces.piece import Piece
+from piece import Piece
+
 
 class Pawn(Piece):
-    def __init__(self , color):
-        super().__init__(color)
-        self.value = 1
-        self.name = 'pawn'
+    def __init__(self, color):
+        super().__init__(color, 1, 'pawn')
