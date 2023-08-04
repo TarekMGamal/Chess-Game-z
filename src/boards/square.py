@@ -5,6 +5,20 @@ class Square:
         self.piece = piece
         self.color = color
 
+    def __eq__(self, other):
+        if not isinstance(other, Square):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+
+        return self.x == other.x and self.y == other.y
+
+    def __ne__(self, other):
+        if not isinstance(other, Square):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+
+        return not self.__eq__(other)
+
     def get_row(self):
         return self.x
 

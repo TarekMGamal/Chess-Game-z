@@ -1,11 +1,11 @@
-from square import Square
-from src.pieces.bishop import Bishop
-from src.pieces.knight import Knight
-from src.pieces.king import King
-from src.pieces.queen import Queen
-from src.pieces.pawn import Pawn
-from src.pieces.rook import Rook
-from move import Move
+from boards.square import Square
+from pieces.bishop import Bishop
+from pieces.knight import Knight
+from pieces.king import King
+from pieces.queen import Queen
+from pieces.pawn import Pawn
+from pieces.rook import Rook
+from boards.move import Move
 
 
 class Board:
@@ -49,7 +49,7 @@ class Board:
     def get_squares(self):
         return self.squares
 
-    def move_piece(self, move):
+    def execute_move(self, move):
         squares = self.squares
 
         initial_square = move.get_initial_square()
