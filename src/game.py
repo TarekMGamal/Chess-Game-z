@@ -26,6 +26,7 @@ class Game:
         self.clock = p.time.Clock()
         self.selected_squares = []
         self.valid_moves = []
+        self.is_white_turn = True
 
     def load_assets(self):
         """ load all the assets in a dictionary to be easily and efficiently accessed later """
@@ -36,13 +37,12 @@ class Game:
         for piece in pieces:
             self.assets[piece] = load_image(piece)
 
-    def draw_board(self, first_color, second_color):
+    def draw_board(self):
         for row in range(self.dimension):
-            for c in range(self.dimension):
-                is_first_color = True if (row + c) % 2 == 0 else False
-                color = p.Color(first_color) if is_first_color else p.Color(second_color)
-                p.draw.rect(self.screen, color, p.Rect(c * self.sq_size, row * self.sq_size, self.sq_size, self.sq_size)
-                            )
+            for col in range(self.dimension):
+                color = self.board.get_square(row, col).get_color()
+                p.draw.rect(self.screen, color,
+                            p.Rect(col * self.sq_size, row * self.sq_size, self.sq_size, self.sq_size))
 
     def draw_pieces(self):
         for r in range(self.dimension):
@@ -60,11 +60,29 @@ class Game:
                     self.screen.blit(piece_image, p.Rect(c * self.sq_size, r * self.sq_size, self.sq_size, self.sq_size)
                                      )
 
-    def highlight_valid_moves(self, valid_moves_color):
-        print("highlight valid moves")
+    def highlight_valid_moves(self, current_square):
+        # highlight current square
+        r = current_square.get_row()
+        c = current_square.get_col()
+        self.board.get_square(r, c).highlight()
 
-    def clear_valid_moves_highlight(self):
-        print("clear valid moves highlight")
+        # highlight valid squares
+        for valid_move in self.valid_moves:
+            r = valid_move.get_final_square().get_row()
+            c = valid_move.get_final_square().get_col()
+            self.board.get_square(r, c).highlight()
+
+        p.display.flip()
+
+    def clear_valid_moves_highlight(self, current_square):
+        # clear highlight current square
+        current_square.clear_highlight()
+
+        # clear highlight valid squares
+        for valid_move in self.valid_moves:
+            valid_move.get_final_square().clear_highlight()
+
+        p.display.flip()
 
     def check_move_validity(self, move):
         for valid_move in self.valid_moves:
@@ -72,6 +90,16 @@ class Game:
                 return True
 
         return False
+
+    def check_turn(self, selected_square):
+        current_color = "white" if self.is_white_turn else "black"
+
+        if selected_square.get_piece() is None:
+            return False
+        elif selected_square.get_piece().get_color() is not current_color:
+            return False
+
+        return True
 
     def handle_mouse_press(self):
         # a square is selected
@@ -83,28 +111,35 @@ class Game:
 
         if len(self.selected_squares) == 1:
             # initial square selection
-            if self.selected_squares[0].get_piece() is None:
+            if not self.check_turn(self.selected_squares[0]):
                 # the selected square is empty
                 self.selected_squares.clear()
             else:
                 # highlight valid moves
                 selected_square = self.selected_squares[0]
                 self.valid_moves = self.board.get_valid_moves(selected_square)
-                self.highlight_valid_moves("yellow")
+                self.highlight_valid_moves(selected_square)
         elif len(self.selected_squares) == 2:
             # final square selection
-            if self.selected_squares[0] != self.selected_squares[1]:
+
+            initial_square = self.selected_squares[0]
+            final_square = self.selected_squares[1]
+            if initial_square != final_square:
                 # if the two selected squares are different
-                initial_square = self.selected_squares[0]
-                final_square = self.selected_squares[1]
-                move = Move(initial_square, final_square)
+
+                temp_move = Move(initial_square, final_square)
+                move = temp_move
+                for cur_move in self.valid_moves:
+                    if cur_move == temp_move:
+                        move = cur_move
 
                 if self.check_move_validity(move):
                     self.board.execute_move(move)
+                    self.is_white_turn = not self.is_white_turn
 
+            self.clear_valid_moves_highlight(initial_square)
             self.selected_squares.clear()
             self.valid_moves = []
-            self.clear_valid_moves_highlight()
         else:
             self.selected_squares.clear()
             print("unexpected number of clicks: ", len(self.selected_squares))
@@ -120,7 +155,7 @@ class Game:
                 elif e.type == p.MOUSEBUTTONDOWN:
                     self.handle_mouse_press()
 
-            self.draw_board("white", "dark grey")
+            self.draw_board()
             self.draw_pieces()
             self.clock.tick(self.max_fps)
             p.display.flip()

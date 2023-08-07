@@ -13,8 +13,8 @@ class Board:
         self.squares = [[0] * 8 for _ in range(8)]
         for i in range(8):
             for j in range(8):
-                color = 'white' if (i + j) % 2 == 0 else 'black'
-                self.squares[i][j] = Square(i, j, color)
+                color = 'white' if (i + j) % 2 == 0 else 'dark grey'
+                self.squares[i][j] = Square(i, j, color, "yellow")
 
         for color in ['black', 'white']:
             if color == 'black':
@@ -44,24 +44,46 @@ class Board:
         return self.squares[x][y].get_piece()
 
     def get_square(self, x, y):
-        return self.squares[x][y]
+        if not self.in_board(x, y):
+            return None
+        else:
+            return self.squares[x][y]
 
     def get_squares(self):
         return self.squares
 
-    def execute_move(self, move):
-        squares = self.squares
+    def execute_en_passant(self, move):
+        pass
 
+    def execute_promotion(self, move):
+        pass
+
+    def execute_castling(self, move):
         initial_square = move.get_initial_square()
         final_square = move.get_final_square()
 
-        initial_x = initial_square.get_row()
-        initial_y = initial_square.get_col()
-        final_x = final_square.get_row()
-        final_y = final_square.get_col()
+        if final_square.get_col() > initial_square.get_col():
+            # castle right side
+            rook_initial_square = self.get_square(initial_square.get_row(), initial_square.get_col() + 3)
+            rook_final_square = self.get_square(initial_square.get_row(), initial_square.get_col() + 1)
 
-        initial_square = squares[initial_x][initial_y]
-        final_square = squares[final_x][final_y]
+            rook = rook_initial_square.get_piece()
+
+            rook_initial_square.remove_piece()
+            rook_final_square.add_piece(rook)
+        else:
+            # castle left side
+            rook_initial_square = self.get_square(initial_square.get_row(), initial_square.get_col() - 4)
+            rook_final_square = self.get_square(initial_square.get_row(), initial_square.get_col() - 1)
+
+            rook = rook_final_square.get_piece()
+
+            rook_initial_square.remove_piece()
+            rook_final_square.add_piece(rook)
+
+    def execute_move(self, move):
+        initial_square = move.get_initial_square()
+        final_square = move.get_final_square()
 
         piece = initial_square.get_piece()
         initial_square.remove_piece()
@@ -72,6 +94,17 @@ class Board:
         else:
             old_piece.kill_piece()
             final_square.change_piece(piece)
+
+        # handling special moves
+        if isinstance(piece, King) or isinstance(piece, Rook) or isinstance(piece, Pawn):
+            piece.set_moved()
+
+        if move.is_castling():
+            self.execute_castling(move)
+        if move.is_en_passant():
+            self.execute_en_passant(move)
+        if move.is_promotion():
+            self.execute_promotion(move)
 
     def get_valid_moves(self, square):
         piece = square.get_piece()
@@ -98,6 +131,31 @@ class Board:
 
     def in_board(self, x, y):
         return True if 8 > x >= 0 and 8 > y >= 0 else False
+
+    def can_castle(self, king_square, rook_square):
+        if king_square is None or rook_square is None:
+            return False
+        if not isinstance(king_square.get_piece(), King) or not isinstance(rook_square.get_piece(), Rook):
+            return False
+
+        king = king_square.get_piece()
+        rook = rook_square.get_piece()
+
+        if king.is_moved() or rook.is_moved():
+            return False
+
+        increment = 1 if rook_square.get_col() > king_square.get_col() else -1
+
+        row = king_square.get_row()
+        for col in range(king_square.get_col() + increment, rook_square.get_col(), increment):
+            if not self.in_board(row, col):
+                return False
+
+            cur_square = self.squares[row][col]
+            if cur_square.get_piece() is not None:
+                return False
+
+        return True
 
     def get_pawn_valid_moves(self, piece, x, y):
         valid_moves = []
@@ -151,6 +209,26 @@ class Board:
                 else:
                     new_move = Move(initial_square, final_square)
                     valid_moves.append(new_move)
+
+        # castling moves handling
+        # there are more handling at "execute_move" function
+        # we have two rooks: right rook at (king.x, king.y + 3) & left rook at (king.x, king.y - 4)
+        # final king squares are: (king.x, king.y + 2) for right castling & (king.x, king.y - 2) for left castling
+        # final rook squares are: (king.x, king.y + 1) for right castling & (king.x, king.y - 1) for left castling
+
+        right_rook_square = self.get_square(x, y + 3)
+        left_rook_square = self.get_square(x, y - 4)
+
+        if self.can_castle(initial_square, right_rook_square):
+            final_square = self.get_square(x, y + 2)
+            castle_right_side_move = Move(initial_square, final_square)
+            castle_right_side_move.set_castling()
+            valid_moves.append(castle_right_side_move)
+        if self.can_castle(initial_square, left_rook_square):
+            final_square = self.get_square(x, y - 2)
+            castle_left_side_move = Move(initial_square, final_square)
+            castle_left_side_move.set_castling()
+            valid_moves.append(castle_left_side_move)
 
         return valid_moves
 

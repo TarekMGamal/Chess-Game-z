@@ -2,6 +2,9 @@ class Move:
     def __init__(self, initial_square, final_square):
         self.initial_square = initial_square
         self.final_square = final_square
+        self.castling = False
+        self.en_passant = False
+        self.promotion = False
 
     def __eq__(self, other):
         if not isinstance(other, Move):
@@ -22,3 +25,21 @@ class Move:
 
     def get_final_square(self):
         return self.final_square
+
+    def is_castling(self):
+        return self.castling
+
+    def set_castling(self):
+        self.castling = True
+
+    def is_en_passant(self):
+        return self.en_passant
+
+    def set_en_passant(self):
+        self.en_passant = True
+
+    def is_promotion(self):
+        return self.promotion
+
+    def set_promotion(self):
+        self.promotion = True
