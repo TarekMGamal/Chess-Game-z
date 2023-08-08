@@ -10,7 +10,8 @@ from boards.move import Move
 
 class Board:
     def __init__(self):
-        self.squares = [[0] * 8 for _ in range(8)]
+        temp_square = Square(-1, -1, "white", "white")
+        self.squares = [[temp_square] * 8 for _ in range(8)]
         for i in range(8):
             for j in range(8):
                 color = 'white' if (i + j) % 2 == 0 else 'dark grey'
@@ -64,22 +65,20 @@ class Board:
 
         if final_square.get_col() > initial_square.get_col():
             # castle right side
-            rook_initial_square = self.get_square(initial_square.get_row(), initial_square.get_col() + 3)
-            rook_final_square = self.get_square(initial_square.get_row(), initial_square.get_col() + 1)
-
-            rook = rook_initial_square.get_piece()
-
-            rook_initial_square.remove_piece()
-            rook_final_square.add_piece(rook)
+            initial_increment = 3
+            final_increment = 1
         else:
             # castle left side
-            rook_initial_square = self.get_square(initial_square.get_row(), initial_square.get_col() - 4)
-            rook_final_square = self.get_square(initial_square.get_row(), initial_square.get_col() - 1)
+            initial_increment = -4
+            final_increment = -1
 
-            rook = rook_final_square.get_piece()
+        rook_initial_square = self.get_square(initial_square.get_row(), initial_square.get_col() + initial_increment)
+        rook_final_square = self.get_square(initial_square.get_row(), initial_square.get_col() + final_increment)
 
-            rook_initial_square.remove_piece()
-            rook_final_square.add_piece(rook)
+        rook = rook_initial_square.get_piece()
+
+        rook_initial_square.remove_piece()
+        rook_final_square.add_piece(rook)
 
     def execute_move(self, move):
         initial_square = move.get_initial_square()
@@ -129,7 +128,8 @@ class Board:
         else:
             return empty_valid_moves
 
-    def in_board(self, x, y):
+    @staticmethod
+    def in_board(x, y):
         return True if 8 > x >= 0 and 8 > y >= 0 else False
 
     def can_castle(self, king_square, rook_square):
@@ -220,15 +220,19 @@ class Board:
         left_rook_square = self.get_square(x, y - 4)
 
         if self.can_castle(initial_square, right_rook_square):
-            final_square = self.get_square(x, y + 2)
-            castle_right_side_move = Move(initial_square, final_square)
-            castle_right_side_move.set_castling()
-            valid_moves.append(castle_right_side_move)
-        if self.can_castle(initial_square, left_rook_square):
-            final_square = self.get_square(x, y - 2)
-            castle_left_side_move = Move(initial_square, final_square)
-            castle_left_side_move.set_castling()
-            valid_moves.append(castle_left_side_move)
+            y_increment = 2
+            can_castle = True
+        elif self.can_castle(initial_square, left_rook_square):
+            y_increment = -2
+            can_castle = True
+        else:
+            y_increment = 0
+            can_castle = False
+
+        if can_castle:
+            final_square = self.get_square(x, y + y_increment)
+            castle_move = Move(initial_square, final_square, castling=True)
+            valid_moves.append(castle_move)
 
         return valid_moves
 

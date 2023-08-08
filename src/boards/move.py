@@ -1,10 +1,10 @@
 class Move:
-    def __init__(self, initial_square, final_square):
+    def __init__(self, initial_square, final_square, castling=False, en_passant=False, promotion=False):
         self.initial_square = initial_square
         self.final_square = final_square
-        self.castling = False
-        self.en_passant = False
-        self.promotion = False
+        self.castling = castling
+        self.en_passant = en_passant
+        self.promotion = promotion
 
     def __eq__(self, other):
         if not isinstance(other, Move):
