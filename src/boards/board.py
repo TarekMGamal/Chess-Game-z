@@ -60,8 +60,10 @@ class Board:
         square = self.get_square(initial_row, final_col)
         square.remove_piece()
 
-    def execute_promotion(self, move):
-        pass
+    @staticmethod
+    def execute_promotion(move):
+        promoted_pawn = Queen(move.get_final_square().get_piece().get_color())
+        move.get_final_square().change_piece(promoted_pawn)
 
     def execute_castling(self, move):
         initial_square = move.get_initial_square()
@@ -179,7 +181,12 @@ class Board:
             if final_square.get_piece() is not None:
                 break
             else:
-                new_move = Move(initial_square, final_square)
+                if final_square.get_row() == 0 or final_square.get_row() == 7:
+                    promotion = True
+                else:
+                    promotion = False
+
+                new_move = Move(initial_square, final_square, promotion=promotion)
                 valid_moves.append(new_move)
 
         for j in [y - 1, y + 1]:
@@ -190,7 +197,12 @@ class Board:
 
             if final_square.get_piece() is not None:
                 if final_square.get_piece().get_color() != piece.get_color():
-                    new_move = Move(initial_square, final_square)
+                    if final_square.get_row() == 0 or final_square.get_row() == 7:
+                        promotion = True
+                    else:
+                        promotion = False
+
+                    new_move = Move(initial_square, final_square, promotion=promotion)
                     valid_moves.append(new_move)
 
         # enpassant conditions
