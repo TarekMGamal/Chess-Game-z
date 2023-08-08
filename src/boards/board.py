@@ -54,7 +54,11 @@ class Board:
         return self.squares
 
     def execute_en_passant(self, move):
-        pass
+        initial_row = move.get_initial_square().get_row()
+        final_col = move.get_final_square().get_col()
+
+        square = self.get_square(initial_row, final_col)
+        square.remove_piece()
 
     def execute_promotion(self, move):
         pass
@@ -105,7 +109,7 @@ class Board:
         if move.is_promotion():
             self.execute_promotion(move)
 
-    def get_valid_moves(self, square):
+    def get_valid_moves(self, square, last_move):
         piece = square.get_piece()
         x = square.get_row()
         y = square.get_col()
@@ -114,7 +118,7 @@ class Board:
         if piece is None:
             return empty_valid_moves
         elif piece.get_name() == 'pawn':
-            return self.get_pawn_valid_moves(piece, x, y)
+            return self.get_pawn_valid_moves(piece, x, y, last_move)
         elif piece.get_name() == 'king':
             return self.get_king_valid_moves(piece, x, y)
         elif piece.get_name() == 'queen':
@@ -157,7 +161,7 @@ class Board:
 
         return True
 
-    def get_pawn_valid_moves(self, piece, x, y):
+    def get_pawn_valid_moves(self, piece, x, y, last_move):
         valid_moves = []
         squares = self.squares
         initial_square = squares[x][y]
@@ -165,6 +169,8 @@ class Board:
         board_direction = 1 if piece.get_color() == 'black' else -1
 
         for i in [x + board_direction, x + (board_direction * 2)]:
+            if i == x + (board_direction * 2) and piece.is_moved():
+                break
             if not self.in_board(i, y):
                 break
 
@@ -186,6 +192,19 @@ class Board:
                 if final_square.get_piece().get_color() != piece.get_color():
                     new_move = Move(initial_square, final_square)
                     valid_moves.append(new_move)
+
+        # enpassant conditions
+        board_direction = 1 if piece.get_color() == 'black' else -1
+
+        if last_move is not None:
+            if last_move.get_final_square().get_piece().get_name() == 'pawn':
+                if last_move.get_final_square().get_row() == x:
+                    if last_move.get_final_square().get_col() == y+1 or last_move.get_final_square().get_col() == y-1:
+                        if abs(last_move.get_initial_square().get_row() - last_move.get_final_square().get_row()) == 2:
+                            final_square = self.get_square(initial_square.get_row() + board_direction,
+                                                           last_move.get_final_square().get_col())
+                            en_passant = Move(initial_square, final_square, en_passant=True)
+                            valid_moves.append(en_passant)
 
         return valid_moves
 

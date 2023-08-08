@@ -27,6 +27,7 @@ class Game:
         self.selected_squares = []
         self.valid_moves = []
         self.is_white_turn = True
+        self.last_move = None
 
     def load_assets(self):
         """ load all the assets in a dictionary to be easily and efficiently accessed later """
@@ -117,7 +118,7 @@ class Game:
             else:
                 # highlight valid moves
                 selected_square = self.selected_squares[0]
-                self.valid_moves = self.board.get_valid_moves(selected_square)
+                self.valid_moves = self.board.get_valid_moves(selected_square, self.last_move)
                 self.highlight_valid_moves(selected_square)
         elif len(self.selected_squares) == 2:
             # final square selection
@@ -135,6 +136,7 @@ class Game:
 
                 if self.check_move_validity(move):
                     self.board.execute_move(move)
+                    self.last_move = move
                     self.is_white_turn = not self.is_white_turn
 
             self.clear_valid_moves_highlight(initial_square)
