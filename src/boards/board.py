@@ -11,7 +11,11 @@ from boards.move import Move
 class Board:
     def __init__(self):
         temp_square = Square(-1, -1, "white", "white")
+
+        self.is_white_turn = True
+        self.last_move = Move(temp_square, temp_square)
         self.squares = [[temp_square] * 8 for _ in range(8)]
+
         for i in range(8):
             for j in range(8):
                 color = 'white' if (i + j) % 2 == 0 else 'dark grey'
@@ -111,7 +115,10 @@ class Board:
         if move.is_promotion():
             self.execute_promotion(move)
 
-    def get_valid_moves(self, square, last_move):
+        self.last_move = move
+        self.is_white_turn = not self.is_white_turn
+
+    def get_valid_moves(self, square):
         piece = square.get_piece()
         x = square.get_row()
         y = square.get_col()
@@ -120,7 +127,7 @@ class Board:
         if piece is None:
             return empty_valid_moves
         elif piece.get_name() == 'pawn':
-            return self.get_pawn_valid_moves(piece, x, y, last_move)
+            return self.get_pawn_valid_moves(piece, x, y)
         elif piece.get_name() == 'king':
             return self.get_king_valid_moves(piece, x, y)
         elif piece.get_name() == 'queen':
@@ -163,7 +170,7 @@ class Board:
 
         return True
 
-    def get_pawn_valid_moves(self, piece, x, y, last_move):
+    def get_pawn_valid_moves(self, piece, x, y):
         valid_moves = []
         squares = self.squares
         initial_square = squares[x][y]
@@ -182,11 +189,11 @@ class Board:
                 break
             else:
                 if final_square.get_row() == 0 or final_square.get_row() == 7:
-                    promotion = True
+                    is_promotion = True
                 else:
-                    promotion = False
+                    is_promotion = False
 
-                new_move = Move(initial_square, final_square, promotion=promotion)
+                new_move = Move(initial_square, final_square, promotion=is_promotion)
                 valid_moves.append(new_move)
 
         for j in [y - 1, y + 1]:
@@ -198,25 +205,29 @@ class Board:
             if final_square.get_piece() is not None:
                 if final_square.get_piece().get_color() != piece.get_color():
                     if final_square.get_row() == 0 or final_square.get_row() == 7:
-                        promotion = True
+                        is_promotion = True
                     else:
-                        promotion = False
+                        is_promotion = False
 
-                    new_move = Move(initial_square, final_square, promotion=promotion)
+                    new_move = Move(initial_square, final_square, promotion=is_promotion)
                     valid_moves.append(new_move)
 
         # enpassant conditions
-        board_direction = 1 if piece.get_color() == 'black' else -1
+        board_direction = 1 if not self.is_white_turn else -1
 
-        if last_move is not None:
-            if last_move.get_final_square().get_piece().get_name() == 'pawn':
-                if last_move.get_final_square().get_row() == x:
-                    if last_move.get_final_square().get_col() == y+1 or last_move.get_final_square().get_col() == y-1:
-                        if abs(last_move.get_initial_square().get_row() - last_move.get_final_square().get_row()) == 2:
-                            final_square = self.get_square(initial_square.get_row() + board_direction,
-                                                           last_move.get_final_square().get_col())
-                            en_passant = Move(initial_square, final_square, en_passant=True)
-                            valid_moves.append(en_passant)
+        last_move_final_square_x = self.last_move.get_final_square().get_row()
+        last_move_final_square_y = self.last_move.get_final_square().get_col()
+
+        if self.last_move is not None:
+            if self.last_move.get_final_square().get_piece() is not None:
+                if self.last_move.get_final_square().get_piece().get_name() == 'pawn':
+                    if last_move_final_square_x == x:
+                        if last_move_final_square_y == y+1 or last_move_final_square_y == y-1:
+                            if abs(self.last_move.get_initial_square().get_row() - last_move_final_square_x) == 2:
+                                final_square = self.get_square(initial_square.get_row() + board_direction,
+                                                               last_move_final_square_y)
+                                en_passant = Move(initial_square, final_square, en_passant=True)
+                                valid_moves.append(en_passant)
 
         return valid_moves
 
@@ -277,14 +288,11 @@ class Board:
 
     def get_rook_valid_moves(self, piece, x, y):
         valid_moves = []
-        squares = self.squares
-        initial_square = squares[x][y]
+        initial_square = self.get_square(x, y)
 
         for i in range(-1, 2):
             for j in range(-1, 2):
-                if i == 0 and j == 0:
-                    continue
-                if i != 0 and j != 0:
+                if (i == 0 and j == 0) or (i != 0 and j != 0):
                     continue
 
                 range_end_x = 8 if i == 1 else -1
@@ -296,12 +304,13 @@ class Board:
                 increment = i if i != 0 else j
 
                 for index in range(range_start + increment, range_end, increment):
-                    xx = index if i != 0 else x
-                    yy = index if j != 0 else y
-                    if not self.in_board(xx, yy):
+                    index_x = index if i != 0 else x
+                    index_y = index if j != 0 else y
+
+                    if not self.in_board(index_x, index_y):
                         continue
 
-                    final_square = squares[index][y] if i != 0 else squares[x][index]
+                    final_square = self.get_square(index, y) if i != 0 else self.get_square(x, index)
 
                     if final_square.get_piece() is not None:
                         if final_square.get_piece().get_color() != piece.get_color():
@@ -316,8 +325,7 @@ class Board:
 
     def get_bishop_valid_moves(self, piece, x, y):
         valid_moves = []
-        squares = self.squares
-        initial_square = squares[x][y]
+        initial_square = self.get_square(x, y)
 
         for i in range(-1, 2):
             for j in range(-1, 2):
@@ -328,41 +336,37 @@ class Board:
                 range_end_y = 8 if j == 1 else -1
 
                 for index_x, index_y in zip(range(x + i, range_end_x, i), range(y + j, range_end_y, j)):
+                    final_square = self.get_square(index_x, index_y)
+
                     if not self.in_board(index_x, index_y):
                         continue
-
-                    final_square = squares[index_x][index_y]
-
-                    if final_square.get_piece() is not None:
-                        if final_square.get_piece().get_color() != piece.get_color():
-                            move = Move(initial_square, final_square)
-                            valid_moves.append(move)
+                    if final_square.get_piece() is not None and\
+                            final_square.get_piece().get_color() == piece.get_color():
                         break
-                    else:
-                        move = Move(initial_square, final_square)
-                        valid_moves.append(move)
+
+                    valid_move = Move(initial_square, final_square)
+                    valid_moves.append(valid_move)
+
+                    # bishop can't jump over pieces
+                    if final_square.get_piece() is not None:
+                        break
 
         return valid_moves
 
     def get_knight_valid_moves(self, piece, x, y):
         valid_moves = []
-        squares = self.squares
-        initial_square = squares[x][y]
+        initial_square = self.get_square(x, y)
 
         for i in range(-2, 3):
             for j in range(-2, 3):
-                if abs(i) + abs(j) != 3:
+                final_square = self.get_square(x + i, y + j)
+
+                if abs(i) + abs(j) != 3 or not self.in_board(x + i, y + j):
                     continue
-                if not self.in_board(x + i, y + j):
+                if final_square.get_piece() is not None and final_square.get_piece().get_color() == piece.get_color():
                     continue
 
-                final_square = squares[x + i][y + j]
-                if final_square.get_piece() is not None:
-                    if final_square.get_piece().get_color() != piece.get_color():
-                        new_move = Move(initial_square, final_square)
-                        valid_moves.append(new_move)
-                else:
-                    new_move = Move(initial_square, final_square)
-                    valid_moves.append(new_move)
+                valid_move = Move(initial_square, final_square)
+                valid_moves.append(valid_move)
 
         return valid_moves
