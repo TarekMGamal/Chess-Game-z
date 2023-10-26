@@ -145,6 +145,10 @@ class Game:
 
                 if self.check_move_validity(move):
                     self.board.execute_move(move)
+                    # if self.board.count_checks() > 0:
+                    print("checks count: ", self.board.count_checks())
+
+                    self.board.update_board_state()
 
             # if the move is executed or the two selected squares are invalid
             self.clear_valid_moves_highlight(initial_square)
@@ -159,13 +163,26 @@ class Game:
 
         # game loop
         while self.is_game_running:
+            if self.board.check_for_checkmate():
+                self.is_game_running = False
+                print("Game Ended by Checkmate")
+                break
+
+            # update for check
+            # update pins and checking pieces
+            # if check generate check moves only
+            # 1) cover the check
+            # 2) kill the checking piece (not available in case of double checks)
+            # 3) move the king to safety
+
             for e in p.event.get():
                 if e.type == p.QUIT:
                     self.is_game_running = False
                 elif e.type == p.MOUSEBUTTONDOWN:
                     self.handle_mouse_press()
                 else:
-                    print("event: ", e)
+                    pass
+                    # print("event: ", e)
 
             # update board
             self.draw_board()
