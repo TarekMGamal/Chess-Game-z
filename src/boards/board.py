@@ -84,10 +84,7 @@ class Board:
                 cur_square = self.get_square(row, col)
                 cur_piece = cur_square.get_piece()
 
-                if cur_piece is None:
-                    continue
-
-                if cur_piece.get_color() == color:
+                if cur_piece is not None and cur_piece.get_color() == color:
                     pieces_squares.append(cur_square)
 
         return pieces_squares
@@ -101,6 +98,7 @@ class Board:
 
     @staticmethod
     def execute_promotion(move):
+        """ Promote pawns to Queens only (for now) """
         promoted_pawn = Queen(move.get_final_square().get_piece().get_color())
         move.get_final_square().change_piece(promoted_pawn)
 
@@ -140,6 +138,7 @@ class Board:
             final_square.change_piece(piece)
 
         # handling special moves
+        # why don't we make set_moved to all pieces?
         if isinstance(piece, King) or isinstance(piece, Rook) or isinstance(piece, Pawn):
             piece.set_moved()
 
@@ -206,14 +205,14 @@ class Board:
         if king.is_moved() or rook.is_moved():
             return False
 
+        # check if there are any pieces between king and rook
         increment = 1 if rook_square.get_col() > king_square.get_col() else -1
-
         row = king_square.get_row()
         for col in range(king_square.get_col() + increment, rook_square.get_col(), increment):
             if not self.in_board(row, col):
                 return False
 
-            cur_square = self.squares[row][col]
+            cur_square = self.get_square(row, col)
             if cur_square.get_piece() is not None:
                 return False
 

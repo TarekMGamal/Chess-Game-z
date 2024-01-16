@@ -64,13 +64,16 @@ class Game:
         # highlight current square
         row = current_square.get_row()
         col = current_square.get_col()
-        self.board.get_square(row, col).highlight()
+        current_square = self.board.get_square(row, col)
+        current_square.highlight()
 
         # highlight valid squares
         for valid_move in self.valid_moves:
             row = valid_move.get_final_square().get_row()
             col = valid_move.get_final_square().get_col()
-            self.board.get_square(row, col).highlight()
+            square = self.board.get_square(row, col)
+            if current_square == valid_move.get_initial_square():
+                square.highlight()
 
         # necessary to update the board's graphics
         p.display.flip()
@@ -120,7 +123,6 @@ class Game:
 
         if len(self.selected_squares) == 1:
             # initial square selection
-
             selected_square = self.selected_squares[0]
 
             if not self.check_selected_square_validity(selected_square):

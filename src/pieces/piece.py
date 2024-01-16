@@ -1,7 +1,7 @@
 class Piece:
     def __init__(self, color, value, name):
         self.color = color
-        self.alive = True
+        self.is_alive = True
         self.name = name
         self.value = value
         self.valid_moves = []
@@ -19,11 +19,11 @@ class Piece:
     def get_value(self):
         return self.value
 
-    def is_alive(self):
-        return self.alive
+    def get_is_alive(self):
+        return self.is_alive
 
     def kill_piece(self):
-        self.alive = False
+        self.is_alive = False
 
     def update_valid_moves(self, valid_moves):
         self.valid_moves = valid_moves
