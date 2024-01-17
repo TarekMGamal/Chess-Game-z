@@ -25,8 +25,14 @@ class Piece:
     def kill_piece(self):
         self.is_alive = False
 
-    def update_valid_moves(self, valid_moves):
+    def get_valid_moves(self):
+        return self.valid_moves
+
+    def set_valid_moves(self, valid_moves):
         self.valid_moves = valid_moves
+
+    def clear_valid_moves(self):
+        self.valid_moves.clear()
 
     def get_is_pinned(self):
         return self.is_pinned

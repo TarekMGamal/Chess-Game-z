@@ -113,6 +113,24 @@ class Game:
         else:
             return True
 
+    def update_game_state(self):
+        self.board.count_checks()
+        valid_moves_num = 0
+
+        pieces_squares = self.board.get_pieces_squares("white" if self.board.is_white_turn else "black")
+        for piece_square in pieces_squares:
+            piece = piece_square.get_piece()
+            piece_valid_moves = self.board.get_valid_moves(piece_square)
+            piece.set_valid_moves(piece_valid_moves)
+            valid_moves_num += len(piece_valid_moves)
+
+        if self.board.checks_count > 0 and valid_moves_num == 0:
+            self.is_game_running = False
+            print("Game Ended by Checkmate")
+        elif self.board.checks_count == valid_moves_num == 0:
+            self.is_game_running = False
+            print("Game Ended by Stalemate")
+
     def handle_mouse_press(self):
         # a square is selected
         mouse_location = p.mouse.get_pos()
@@ -130,17 +148,16 @@ class Game:
                 self.selected_squares.clear()
             else:
                 # highlight valid moves
-                self.valid_moves = self.board.get_valid_moves(selected_square)
+                piece = selected_square.get_piece()
+                self.valid_moves = piece.get_valid_moves()
                 self.highlight_valid_moves(selected_square)
         elif len(self.selected_squares) == 2:
             # final square selection
-
             initial_square = self.selected_squares[0]
             final_square = self.selected_squares[1]
 
             if initial_square != final_square:
                 # if the two selected squares are different
-
                 # get the move object in "self.valid_moves" as it contains important info which is not found in "move"
                 move = Move(initial_square, final_square)
                 move = self.get_valid_move(move)
@@ -148,35 +165,24 @@ class Game:
                 if self.check_move_validity(move):
                     self.board.execute_move(move)
                     # if self.board.count_checks() > 0:
-                    print("checks count: ", self.board.count_checks())
+                    print("checks count: ", self.board.checks_count)
 
                     self.board.update_board_state()
+                    self.update_game_state()
 
             # if the move is executed or the two selected squares are invalid
             self.clear_valid_moves_highlight(initial_square)
             self.selected_squares.clear()
-            self.valid_moves.clear()
         else:
             self.selected_squares.clear()
             print("unexpected number of clicks: ", len(self.selected_squares))
 
     def run_game(self):
         self.is_game_running = True
+        self.update_game_state()
 
         # game loop
         while self.is_game_running:
-            if self.board.check_for_checkmate():
-                self.is_game_running = False
-                print("Game Ended by Checkmate")
-                break
-
-            # update for check
-            # update pins and checking pieces
-            # if check generate check moves only
-            # 1) cover the check
-            # 2) kill the checking piece (not available in case of double checks)
-            # 3) move the king to safety
-
             for e in p.event.get():
                 if e.type == p.QUIT:
                     self.is_game_running = False
