@@ -13,6 +13,9 @@ class Knight(Piece):
         x = initial_square.get_row()
         y = initial_square.get_col()
 
+        if piece.get_is_pinned():
+            return valid_moves
+
         for i in range(-2, 3):
             for j in range(-2, 3):
                 final_square = board.get_square(x + i, y + j)

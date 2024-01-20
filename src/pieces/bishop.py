@@ -31,7 +31,9 @@ class Bishop(Piece):
                         break
 
                     valid_move = Move(initial_square, final_square)
-                    valid_moves.append(valid_move)
+                    direction_tuple = (board.get_sign(index_x - x), board.get_sign(index_y - y))
+                    if piece.get_pin_direction() == () or piece.get_pin_direction() == direction_tuple:
+                        valid_moves.append(valid_move)
 
                     # bishop can't jump over pieces
                     if final_square.get_piece() is not None:

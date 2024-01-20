@@ -7,8 +7,11 @@ class Piece:
         self.valid_moves = []
         self.is_pinned = False
 
-        # list of tuples indicating the directions of the pin
-        self.pins = []
+        # tuple of two values indicating the direction of the pin
+        # the tuple is calculated by subtracting final square from initial square coordinates
+        # and simplifying the values to ones and zeros
+        # a piece can't be pinned in more than one direction, so only one tuple is needed
+        self.pin = ()
 
     def get_name(self):
         return self.name
@@ -37,9 +40,13 @@ class Piece:
     def get_is_pinned(self):
         return self.is_pinned
 
+    def get_pin_direction(self):
+        return self.pin
+
     def set_pin(self, direction_tuple):
         self.is_pinned = True
-        self.pins.append(direction_tuple)
+        self.pin = direction_tuple
 
     def clear_pins(self):
-        self.pins.clear()
+        self.is_pinned = False
+        self.pin = ()

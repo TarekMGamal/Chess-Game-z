@@ -86,6 +86,10 @@ class Board:
         return pieces_squares
 
     @staticmethod
+    def get_sign(num):
+        return (num > 0) - (num < 0)
+
+    @staticmethod
     def get_opposite_color(color):
         return "white" if color == "black" else "black"
 
