@@ -42,14 +42,20 @@ class Rook(Piece):
                         continue
 
                     final_square = board.get_square(index, y) if i != 0 else board.get_square(x, index)
+                    direction_tuple = (board.get_sign(index_x - x), board.get_sign(index_y - y))
+                    reverse_direction_tuple = (-board.get_sign(index_x - x), -board.get_sign(index_y - y))
 
                     if final_square.get_piece() is not None:
                         if final_square.get_piece().get_color() != piece.get_color():
-                            move = Move(initial_square, final_square)
-                            valid_moves.append(move)
+                            valid_move = Move(initial_square, final_square)
+                            if piece.get_pin_direction() == () or piece.get_pin_direction() == direction_tuple \
+                                    or piece.get_pin_direction() == reverse_direction_tuple:
+                                valid_moves.append(valid_move)
                         break
                     else:
-                        move = Move(initial_square, final_square)
-                        valid_moves.append(move)
+                        valid_move = Move(initial_square, final_square)
+                        if piece.get_pin_direction() == () or piece.get_pin_direction() == direction_tuple \
+                                or piece.get_pin_direction() == reverse_direction_tuple:
+                            valid_moves.append(valid_move)
 
         return valid_moves
