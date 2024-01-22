@@ -272,7 +272,7 @@ class Board:
         return False
 
     def get_check_valid_moves(self):
-        """ get valid moves when king is in check (assuming there is a check) """
+        """ get valid moves when king is in check """
 
         if len(self.checking_pieces_squares) <= 0:
             print("Error: 'get check valid moves' function called when there is no check")
@@ -453,16 +453,25 @@ class Board:
         if isinstance(attacking_piece, Knight) and (x != 0 and y != 0) and (abs(x) + abs(y) == 3):
             return True
 
-        # check for pawn attacks
-        x1 = initial_square.get_row() - self.get_board_direction()
-        y11 = initial_square.get_col() + 1
-        y12 = initial_square.get_col() - 1
+        x1 = initial_square.get_row()
+        y1 = initial_square.get_col()
 
         x2 = final_square.get_row()
         y2 = final_square.get_col()
 
-        if isinstance(attacking_piece, Pawn) and (x1 == x2 and (y11 == y2 or y12 == y2)):
-            return True
+        if isinstance(attacking_piece, Pawn):
+            if x1 + self.board_direction == x2 and (y1 + 1 == y2 or y1 - 1 == y2):
+                if final_square.get_piece() is not None \
+                        and final_square.get_piece().get_color() != attacking_piece.get_color():
+                    return True
+            elif y1 == y2 and x2 - x1 == self.board_direction:
+                if final_square.get_piece() is None:
+                    return True if not consider_in_between_pieces \
+                        else not self.check_inbetween_pieces(initial_square, final_square)
+            elif y1 == y2 and x2 - x1 == self.board_direction * 2:
+                if final_square.get_piece() is None:
+                    return True if not consider_in_between_pieces \
+                        else not self.check_inbetween_pieces(initial_square, final_square)
 
         return False
 
