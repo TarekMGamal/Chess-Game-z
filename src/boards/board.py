@@ -172,8 +172,6 @@ class Board:
         if self.checks_count > 0:
             return self.get_check_valid_moves()
 
-        # if piece is pinned -> can't move except in the direction of the pin
-
         if piece is None:
             return empty_valid_moves
         elif piece.get_name() == 'pawn':
@@ -183,9 +181,9 @@ class Board:
         elif piece.get_name() == 'queen':
             return Queen.calculate_valid_moves(self, square)
         elif piece.get_name() == 'rook':
-            return Rook.calculate_valid_moves(self, square)
+            return piece.calculate_valid_moves(board=self, initial_square=square)
         elif piece.get_name() == 'bishop':
-            return Bishop.calculate_valid_moves(self, square)
+            return piece.calculate_valid_moves(board=self, initial_square=square)
         elif piece.get_name() == 'knight':
             return Knight.calculate_valid_moves(self, square)
         else:
@@ -200,7 +198,7 @@ class Board:
         king = king_square.get_piece()
         rook = rook_square.get_piece()
 
-        if king.is_moved() or rook.is_moved():
+        if king.get_is_moved() or rook.get_is_moved():
             return False
 
         # check if there are any pieces between king and rook
@@ -266,7 +264,7 @@ class Board:
         """ Check if the piece in the square is protected by a piece of the same color or not """
         pieces_squares = self.get_pieces_squares(color)
         for piece_square in pieces_squares:
-            if self.can_attack(piece_square, square, True):
+            if self.can_attack(piece_square, square, consider_in_between_pieces=True):
                 return True
 
         return False
@@ -311,9 +309,10 @@ class Board:
                         range(king_row + increment_x, attacking_piece_square.get_row(), increment_x),
                         range(king_col + increment_y, attacking_piece_square.get_col(), increment_y)):
                     covering_square = self.get_square(covering_row, covering_col)
-                    if self.can_attack(initial_square, covering_square):  # if current piece can cover the check
-                        new_move = Move(initial_square, covering_square)
-                        check_valid_moves.append(new_move)
+                    # if current piece can cover the check
+                    if self.can_attack(initial_square, covering_square, consider_in_between_pieces=True):
+                        valid_move = Move(initial_square, covering_square)
+                        check_valid_moves.append(valid_move)
 
         # 2) kill the checking piece (not available in case of double checks)
         if len(self.checking_pieces_squares) == 1:
@@ -322,9 +321,9 @@ class Board:
             # loop through all pieces and check if any piece can attack the attacking piece
             pieces_squares = self.get_pieces_squares(checked_king.get_color())
             for cur_square in pieces_squares:
-                if self.can_attack(cur_square, attacking_piece_square):
-                    new_move = Move(cur_square, attacking_piece_square)
-                    check_valid_moves.append(new_move)
+                if self.can_attack(cur_square, attacking_piece_square, consider_in_between_pieces=True):
+                    valid_move = Move(cur_square, attacking_piece_square)
+                    check_valid_moves.append(valid_move)
 
         # 3) move the king to safety
         check_valid_moves += self.get_king_valid_moves(king_row, king_col)
@@ -394,28 +393,36 @@ class Board:
         self.checks_count = checks_count
 
     def check_inbetween_pieces(self, initial_square, final_square):
-        """ Determine if there are any pieces between the pieces in the initial position and the final position
-        (assuming that the piece in the initial square can go jump attack the piece in the final square) """
-        x = final_square.get_row() - initial_square.get_row()
-        y = final_square.get_col() - initial_square.get_col()
+        """ Determine if there are any pieces between the pieces in the initial position and the final position """
+        diff_x = final_square.get_row() - initial_square.get_row()
+        diff_y = final_square.get_col() - initial_square.get_col()
         increment_x = 0
         increment_y = 0
 
-        if x > 0:
+        if diff_x > 0:
             increment_x = 1
-        elif x < 0:
+        elif diff_x < 0:
             increment_x = -1
-        if y > 0:
+        if diff_y > 0:
             increment_y = 1
-        elif y < 0:
+        elif diff_y < 0:
             increment_y = -1
-        if increment_x == 0 or increment_y == 0:
-            return False
 
-        for row, col in zip(range(initial_square.get_row() + increment_x, final_square.get_row(), increment_x),
-                            range(initial_square.get_col() + increment_y, final_square.get_col(), increment_y)):
-            if self.get_square(row, col).get_piece() is not None:
-                return True
+        if increment_x == 0 and increment_y != 0:
+            row = initial_square.get_row()
+            for col in range(initial_square.get_col() + increment_y, final_square.get_col(), increment_y):
+                if self.get_square(row, col).get_piece() is not None:
+                    return True
+        elif increment_x != 0 and increment_y == 0:
+            col = initial_square.get_col()
+            for row in range(initial_square.get_row() + increment_x, final_square.get_row(), increment_x):
+                if self.get_square(row, col).get_piece() is not None:
+                    return True
+        elif increment_x != 0 and increment_y != 0:
+            for row, col in zip(range(initial_square.get_row() + increment_x, final_square.get_row(), increment_x),
+                                range(initial_square.get_col() + increment_y, final_square.get_col(), increment_y)):
+                if self.get_square(row, col).get_piece() is not None:
+                    return True
 
         return False
 
@@ -434,9 +441,51 @@ class Board:
         if attacking_piece is None:
             return False
 
-        # has to be set to determine if the king can go to this square or not
-        # if isinstance(attacking_piece, King):
-        #
+        # has to be set to determine if the attacked_piece can go to this square or not
+        if isinstance(attacking_piece, King):
+            # this is another function use it as a starting point
+            attacked_piece = final_square.get_piece()
+            x = final_square.get_row()
+            y = final_square.get_col()
+
+            if attacked_piece is None:
+                return True
+
+            for row_increment in range(-1, 2):
+                for col_increment in range(-1, 2):
+                    if row_increment == col_increment == 0:
+                        continue
+
+                    row = x
+                    col = y
+                    while self.in_board(row, col):
+                        cur_piece = self.get_square(row, col).get_piece()
+
+                        if cur_piece is not None:
+                            if isinstance(cur_piece, King) and cur_piece.get_color() != attacked_piece.get_color():
+                                continue
+
+                            if cur_piece.get_color() == attacked_piece.get_color():
+                                pass
+
+                        row += row_increment
+                        col += col_increment
+
+            # knight defence
+            for row in range(-2, 3):
+                for col in range(-2, 3):
+                    if abs(row) + abs(col) != 3:
+                        continue
+                    if not self.in_board(x + row, y + col):
+                        continue
+                    if self.get_square(x + row, y + col).get_piece() is None:
+                        continue
+                    if self.get_square(x + row, y + col).get_piece().get_color() != attacked_piece.get_color():
+                        continue
+                    if not isinstance(self.get_square(x + row, y + col).get_piece(), Knight):
+                        continue
+
+                    return True
 
         if isinstance(attacking_piece, Bishop) and abs(x) == abs(y):
             return True if not consider_in_between_pieces \

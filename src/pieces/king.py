@@ -7,7 +7,7 @@ class King(Piece):
 
         self.moved = False
 
-    def is_moved(self):
+    def get_is_moved(self):
         return self.moved
 
     def set_moved(self):

@@ -6,6 +6,7 @@ class Piece:
         self.value = value
         self.valid_moves = []
         self.is_pinned = False
+        self.is_moved = False
 
         # tuple of two values indicating the direction of the pin
         # the tuple is calculated by subtracting final square from initial square coordinates
@@ -50,3 +51,9 @@ class Piece:
     def clear_pins(self):
         self.is_pinned = False
         self.pin = ()
+
+    def get_is_moved(self):
+        return self.is_moved
+
+    def set_moved(self):
+        self.is_moved = True

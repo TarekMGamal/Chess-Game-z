@@ -4,7 +4,53 @@ from boards.move import Move
 
 class Bishop(Piece):
     def __init__(self, color):
-        super().__init__(color, 3.1, 'bishop')
+        super().__init__(color, 3.0001, 'bishop')
+
+    @staticmethod
+    def can_reach(board, initial_square, final_square, consider_in_between_pieces=True):
+        can_reach = False
+        diff_x = final_square.get_row() - initial_square.get_row()
+        diff_y = final_square.get_col() - initial_square.get_col()
+
+        if abs(diff_x) == abs(diff_y):
+            can_reach = True
+
+            if consider_in_between_pieces:
+                can_reach = not board.check_inbetween_pieces(initial_square, final_square)
+
+        return can_reach
+
+    @staticmethod
+    def can_attack(board, initial_square, final_square):
+        can_attack = False
+        attacking_piece = initial_square.get_piece()
+        attacked_piece = final_square.get_piece()
+
+        can_reach = Bishop.can_reach(board, initial_square, final_square)
+
+        if attacked_piece is None:
+            return can_reach
+
+        are_different_color = attacked_piece.get_color() != attacking_piece.get_color()
+
+        if can_reach and are_different_color:
+            can_attack = True
+
+        return can_attack
+
+    @staticmethod
+    def can_defend(board, initial_square, final_square):
+        can_defend = False
+        attacking_piece = initial_square.get_piece()
+        attacked_piece = final_square.get_piece()
+
+        can_reach = Bishop.can_reach(board, initial_square, final_square)
+        are_same_color = attacked_piece.get_color() == attacking_piece.get_color()
+
+        if can_reach and are_same_color:
+            can_defend = True
+
+        return can_defend
 
     @staticmethod
     def calculate_valid_moves(board, initial_square):
@@ -13,33 +59,20 @@ class Bishop(Piece):
         x = initial_square.get_row()
         y = initial_square.get_col()
 
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                if i == 0 or j == 0:
-                    continue
+        for i in range(0, 8):
+            for j in range(0, 8):
+                final_square = board.get_square(i, j)
+                index_x = final_square.get_row()
+                index_y = final_square.get_col()
 
-                range_end_x = 8 if i == 1 else -1
-                range_end_y = 8 if j == 1 else -1
-
-                for index_x, index_y in zip(range(x + i, range_end_x, i), range(y + j, range_end_y, j)):
-                    final_square = board.get_square(index_x, index_y)
-
-                    if not board.in_board(index_x, index_y):
-                        continue
-                    if final_square.get_piece() is not None and \
-                            final_square.get_piece().get_color() == piece.get_color():
-                        break
-
-                    valid_move = Move(initial_square, final_square)
+                if Bishop.can_attack(board, initial_square, final_square):
+                    # check for pins
                     direction_tuple = (board.get_sign(index_x - x), board.get_sign(index_y - y))
                     reverse_direction_tuple = (-board.get_sign(index_x - x), -board.get_sign(index_y - y))
 
                     if not piece.is_pinned or piece.get_pin_direction() == direction_tuple \
                             or piece.get_pin_direction() == reverse_direction_tuple:
+                        valid_move = Move(initial_square, final_square)
                         valid_moves.append(valid_move)
-
-                    # bishop can't jump over pieces
-                    if final_square.get_piece() is not None:
-                        break
 
         return valid_moves

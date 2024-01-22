@@ -8,7 +8,7 @@ class Pawn(Piece):
 
         self.moved = False
 
-    def is_moved(self):
+    def get_is_moved(self):
         return self.moved
 
     def set_moved(self):
@@ -22,7 +22,7 @@ class Pawn(Piece):
         y = initial_square.get_col()
 
         for i in [x + board.get_board_direction(), x + (board.get_board_direction() * 2)]:
-            if i == x + (board.get_board_direction() * 2) and piece.is_moved():
+            if i == x + (board.get_board_direction() * 2) and piece.get_is_moved():
                 continue
             if not board.in_board(i, y):
                 break
