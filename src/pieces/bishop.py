@@ -41,11 +41,17 @@ class Bishop(Piece):
     @staticmethod
     def can_defend(board, initial_square, final_square):
         can_defend = False
+
+        if initial_square is None or final_square is None:
+            return can_defend
+
         attacking_piece = initial_square.get_piece()
         attacked_piece = final_square.get_piece()
 
         can_reach = Bishop.can_reach(board, initial_square, final_square)
-        are_same_color = attacked_piece.get_color() == attacking_piece.get_color()
+        are_same_color = True
+        if attacked_piece is not None:
+            are_same_color = attacked_piece.get_color() == attacking_piece.get_color()
 
         if can_reach and are_same_color:
             can_defend = True

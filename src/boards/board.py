@@ -164,8 +164,6 @@ class Board:
     def get_valid_moves(self, square):
         """ Get the list of valid moves of the given square """
         piece = square.get_piece()
-        x = square.get_row()
-        y = square.get_col()
         empty_valid_moves = []
 
         # if there is a check generate only check valid moves
@@ -175,17 +173,17 @@ class Board:
         if piece is None:
             return empty_valid_moves
         elif piece.get_name() == 'pawn':
-            return Pawn.calculate_valid_moves(self, square)
+            return Pawn.calculate_valid_moves(board=self, initial_square=square)
         elif piece.get_name() == 'king':
-            return self.get_king_valid_moves(x, y)
+            return King.calculate_valid_moves(board=self, initial_square=square)
         elif piece.get_name() == 'queen':
-            return Queen.calculate_valid_moves(self, square)
+            return Queen.calculate_valid_moves(board=self, initial_square=square)
         elif piece.get_name() == 'rook':
-            return piece.calculate_valid_moves(board=self, initial_square=square)
+            return Rook.calculate_valid_moves(board=self, initial_square=square)
         elif piece.get_name() == 'bishop':
-            return piece.calculate_valid_moves(board=self, initial_square=square)
+            return Bishop.calculate_valid_moves(board=self, initial_square=square)
         elif piece.get_name() == 'knight':
-            return Knight.calculate_valid_moves(self, square)
+            return Knight.calculate_valid_moves(board=self, initial_square=square)
         else:
             return empty_valid_moves
 
@@ -443,49 +441,7 @@ class Board:
 
         # has to be set to determine if the attacked_piece can go to this square or not
         if isinstance(attacking_piece, King):
-            # this is another function use it as a starting point
-            attacked_piece = final_square.get_piece()
-            x = final_square.get_row()
-            y = final_square.get_col()
-
-            if attacked_piece is None:
-                return True
-
-            for row_increment in range(-1, 2):
-                for col_increment in range(-1, 2):
-                    if row_increment == col_increment == 0:
-                        continue
-
-                    row = x
-                    col = y
-                    while self.in_board(row, col):
-                        cur_piece = self.get_square(row, col).get_piece()
-
-                        if cur_piece is not None:
-                            if isinstance(cur_piece, King) and cur_piece.get_color() != attacked_piece.get_color():
-                                continue
-
-                            if cur_piece.get_color() == attacked_piece.get_color():
-                                pass
-
-                        row += row_increment
-                        col += col_increment
-
-            # knight defence
-            for row in range(-2, 3):
-                for col in range(-2, 3):
-                    if abs(row) + abs(col) != 3:
-                        continue
-                    if not self.in_board(x + row, y + col):
-                        continue
-                    if self.get_square(x + row, y + col).get_piece() is None:
-                        continue
-                    if self.get_square(x + row, y + col).get_piece().get_color() != attacked_piece.get_color():
-                        continue
-                    if not isinstance(self.get_square(x + row, y + col).get_piece(), Knight):
-                        continue
-
-                    return True
+            pass
 
         if isinstance(attacking_piece, Bishop) and abs(x) == abs(y):
             return True if not consider_in_between_pieces \
