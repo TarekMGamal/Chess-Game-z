@@ -31,8 +31,9 @@ class Pawn(Piece):
                 can_reach = True
         elif abs(col_diff) == 1 and row_diff == board.get_board_direction():
             # pawn takes
-            if final_square.get_piece().get_color() != pawn.get_color():
-                return True
+            if final_square.get_piece() is not None:
+                if final_square.get_piece().get_color() != pawn.get_color():
+                    can_reach = True
 
         # enpassant
         last_move_final_square_x = board.last_move.get_final_square().get_row()
@@ -66,21 +67,21 @@ class Pawn(Piece):
             # pawn takes
             can_attack = True
 
-        # enpassant
-        last_move_final_square_x = board.last_move.get_final_square().get_row()
-        last_move_final_square_y = board.last_move.get_final_square().get_col()
-
-        if board.last_move is not None:
-            if board.last_move.get_final_square().get_piece() is not None:
-                if board.last_move.get_final_square().get_piece().get_name() == 'pawn':
-                    if last_move_final_square_x == initial_square.get_row():
-                        if abs(last_move_final_square_y - initial_square.get_col()) == 1:
-                            if abs(board.last_move.get_initial_square().get_row() - last_move_final_square_x) == 2:
-                                cur_final_square = board.get_square(
-                                    initial_square.get_row() + board.get_board_direction(), last_move_final_square_y)
-
-                                if cur_final_square == final_square:
-                                    can_attack = True
+        # # enpassant
+        # last_move_final_square_x = board.last_move.get_final_square().get_row()
+        # last_move_final_square_y = board.last_move.get_final_square().get_col()
+        #
+        # if board.last_move is not None:
+        #     if board.last_move.get_final_square().get_piece() is not None:
+        #         if board.last_move.get_final_square().get_piece().get_name() == 'pawn':
+        #             if last_move_final_square_x == initial_square.get_row():
+        #                 if abs(last_move_final_square_y - initial_square.get_col()) == 1:
+        #                     if abs(board.last_move.get_initial_square().get_row() - last_move_final_square_x) == 2:
+        #                         cur_final_square = board.get_square(
+        #                             initial_square.get_row() + board.get_board_direction(), last_move_final_square_y)
+        #
+        #                         if cur_final_square == final_square:
+        #                             can_attack = True
 
         are_different_color = attacked_piece.get_color() != attacking_piece.get_color()
 
@@ -104,7 +105,7 @@ class Pawn(Piece):
         row_diff = final_square.get_row() - initial_square.get_row()
         col_diff = final_square.get_col() - initial_square.get_col()
 
-        if abs(col_diff) == 1 and row_diff == board.get_board_direction():
+        if abs(col_diff) == 1 and row_diff == -1 * board.get_board_direction():
             # pawn takes
             can_defend = True
 

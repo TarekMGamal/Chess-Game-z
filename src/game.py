@@ -114,7 +114,8 @@ class Game:
             return True
 
     def update_game_state(self):
-        self.board.count_checks()
+        checks_count = self.board.count_checks()
+        print("checks count", checks_count)
         valid_moves_num = 0
 
         pieces_squares = self.board.get_pieces_squares("white" if self.board.is_white_turn else "black")
@@ -164,9 +165,6 @@ class Game:
 
                 if self.check_move_validity(move):
                     self.board.execute_move(move)
-                    # if self.board.count_checks() > 0:
-                    print("checks count: ", self.board.checks_count)
-
                     self.board.update_board_state()
                     self.update_game_state()
 

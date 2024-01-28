@@ -7,7 +7,7 @@ class King(Piece):
         super().__init__(color, 1000, 'king')
 
     @staticmethod
-    def can_reach(board, initial_square, final_square):
+    def can_reach(board, initial_square, final_square, consider_in_between_pieces=True):
         can_reach = False
 
         if initial_square is None or final_square is None:
@@ -76,30 +76,49 @@ class King(Piece):
     @staticmethod
     def calculate_valid_moves(board, initial_square):
         valid_moves = []
-        not_defended = True
-        piece = initial_square.get_piece()
+        king = initial_square.get_piece()
         x = initial_square.get_row()
         y = initial_square.get_col()
 
         for i in range(-1, 2):
             for j in range(-1, 2):
-                final_square = board.get_square(x + i, y + j)
-                if initial_square == final_square:
+                if i == 0 and j == 0:
+                    continue
+                if not board.in_board(x + i, y + j):
                     continue
 
-                can_reach = King.can_reach(board, initial_square, final_square)
+                final_square = board.get_square(x + i, y + j)
+                if final_square.get_piece() is not None and final_square.get_piece().get_color() == king.get_color():
+                    continue
 
-                pieces_squares = board.get_pieces_squares(board.get_opposite_color(piece.get_color()))
-                for piece_square in pieces_squares:
-                    enemy_piece = piece_square.get_piece()
-                    piece_class = enemy_piece.__class__
+                initial_square.remove_piece()
+                if not board.check_is_protected(final_square, board.get_opposite_color(king.get_color())):
+                    new_move = Move(initial_square, final_square)
+                    valid_moves.append(new_move)
+                initial_square.add_piece(king)
 
-                    if piece_class.can_defend(board, piece_square, final_square):
-                        not_defended = False
-                        break
+        # castling moves handling
+        # there are more handling at "execute_move" function
+        # we have two rooks: right rook at (king.x, king.y + 3) & left rook at (king.x, king.y - 4)
+        # final king squares are: (king.x, king.y + 2) for right castling & (king.x, king.y - 2) for left castling
+        # final rook squares are: (king.x, king.y + 1) for right castling & (king.x, king.y - 1) for left castling
 
-                if can_reach and not_defended:
-                    valid_move = Move(initial_square, final_square)
-                    valid_moves.append(valid_move)
+        right_rook_square = board.get_square(x, y + 3)
+        left_rook_square = board.get_square(x, y - 4)
+
+        if board.can_castle(initial_square, right_rook_square):
+            y_increment = 2
+            can_castle = True
+        elif board.can_castle(initial_square, left_rook_square):
+            y_increment = -2
+            can_castle = True
+        else:
+            y_increment = 0
+            can_castle = False
+
+        if can_castle:
+            final_square = board.get_square(x, y + y_increment)
+            castle_move = Move(initial_square, final_square, castling=True)
+            valid_moves.append(castle_move)
 
         return valid_moves

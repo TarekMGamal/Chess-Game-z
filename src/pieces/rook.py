@@ -11,9 +11,14 @@ class Rook(Piece):
         can_reach = False
         diff_x = final_square.get_row() - initial_square.get_row()
         diff_y = final_square.get_col() - initial_square.get_col()
+        rook = initial_square.get_piece()
 
         if diff_x == 0 or diff_y == 0:
-            can_reach = True
+            direction_tuple = (board.get_sign(diff_x), board.get_sign(diff_y))
+            reverse_direction_tuple = (-board.get_sign(diff_x), -board.get_sign(diff_y))
+            if not rook.is_pinned or rook.get_pin_direction() == direction_tuple \
+                    or rook.get_pin_direction() == reverse_direction_tuple:
+                can_reach = True
 
             if consider_in_between_pieces:
                 can_reach = not board.check_inbetween_pieces(initial_square, final_square)

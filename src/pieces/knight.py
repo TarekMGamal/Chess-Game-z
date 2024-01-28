@@ -7,9 +7,15 @@ class Knight(Piece):
         super().__init__(color, 3, 'knight')
 
     @staticmethod
-    def can_reach(board, initial_square, final_square):
+    def can_reach(board, initial_square, final_square, consider_in_between_pieces=True):
+        can_reach = False
+
         if initial_square is None or final_square is None:
-            return False
+            return can_reach
+
+        knight = initial_square.get_piece()
+        if knight.get_is_pinned():
+            return can_reach
 
         row_diff = abs(final_square.get_row() - initial_square.get_row())
         col_diff = abs(final_square.get_col() - initial_square.get_col())

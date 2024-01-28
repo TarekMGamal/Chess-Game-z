@@ -161,9 +161,9 @@ class Board:
 
         self.last_move = move
 
-    def get_valid_moves(self, square):
+    def get_valid_moves(self, initial_square):
         """ Get the list of valid moves of the given square """
-        piece = square.get_piece()
+        piece = initial_square.get_piece()
         empty_valid_moves = []
 
         # if there is a check generate only check valid moves
@@ -172,20 +172,8 @@ class Board:
 
         if piece is None:
             return empty_valid_moves
-        elif piece.get_name() == 'pawn':
-            return Pawn.calculate_valid_moves(board=self, initial_square=square)
-        elif piece.get_name() == 'king':
-            return King.calculate_valid_moves(board=self, initial_square=square)
-        elif piece.get_name() == 'queen':
-            return Queen.calculate_valid_moves(board=self, initial_square=square)
-        elif piece.get_name() == 'rook':
-            return Rook.calculate_valid_moves(board=self, initial_square=square)
-        elif piece.get_name() == 'bishop':
-            return Bishop.calculate_valid_moves(board=self, initial_square=square)
-        elif piece.get_name() == 'knight':
-            return Knight.calculate_valid_moves(board=self, initial_square=square)
         else:
-            return empty_valid_moves
+            return piece.__class__.calculate_valid_moves(board=self, initial_square=initial_square)
 
     def can_castle(self, king_square, rook_square):
         if king_square is None or rook_square is None:
@@ -212,57 +200,15 @@ class Board:
 
         return True
 
-    def get_king_valid_moves(self, x, y):
-        valid_moves = []
-        king_square = self.get_square(x, y)
-        king = king_square.get_piece()
-
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                if i == 0 and j == 0:
-                    continue
-                if not self.in_board(x + i, y + j):
-                    continue
-
-                final_square = self.get_square(x + i, y + j)
-                if final_square.get_piece() is not None and final_square.get_piece().get_color() == king.get_color():
-                    continue
-
-                if not self.check_is_protected(final_square, self.get_opposite_color(king.get_color())):
-                    new_move = Move(king_square, final_square)
-                    valid_moves.append(new_move)
-
-        # castling moves handling
-        # there are more handling at "execute_move" function
-        # we have two rooks: right rook at (king.x, king.y + 3) & left rook at (king.x, king.y - 4)
-        # final king squares are: (king.x, king.y + 2) for right castling & (king.x, king.y - 2) for left castling
-        # final rook squares are: (king.x, king.y + 1) for right castling & (king.x, king.y - 1) for left castling
-
-        right_rook_square = self.get_square(x, y + 3)
-        left_rook_square = self.get_square(x, y - 4)
-
-        if self.can_castle(king_square, right_rook_square):
-            y_increment = 2
-            can_castle = True
-        elif self.can_castle(king_square, left_rook_square):
-            y_increment = -2
-            can_castle = True
-        else:
-            y_increment = 0
-            can_castle = False
-
-        if can_castle:
-            final_square = self.get_square(x, y + y_increment)
-            castle_move = Move(king_square, final_square, castling=True)
-            valid_moves.append(castle_move)
-
-        return valid_moves
-
     def check_is_protected(self, square, color):
         """ Check if the piece in the square is protected by a piece of the same color or not """
         pieces_squares = self.get_pieces_squares(color)
         for piece_square in pieces_squares:
-            if self.can_attack(piece_square, square, consider_in_between_pieces=True):
+            if square == piece_square:
+                continue
+
+            piece = piece_square.get_piece()
+            if piece.__class__.can_defend(self, piece_square, square):
                 return True
 
         return False
@@ -287,6 +233,10 @@ class Board:
             # loop on all squares to find same-color pieces that can cover the check
             pieces_squares = self.get_pieces_squares(checked_king.get_color())
             for initial_square in pieces_squares:
+                piece = initial_square.get_piece()
+                if isinstance(piece, King):
+                    continue
+
                 x = attacking_piece_square.get_row() - checked_king_square.get_row()
                 y = attacking_piece_square.get_col() - checked_king_square.get_col()
                 increment_x = 0
@@ -299,18 +249,37 @@ class Board:
                     increment_y = 1
                 elif y < 0:
                     increment_y = -1
-                if increment_x == 0 or increment_y == 0:
+                if increment_x == 0 and increment_y == 0:
                     continue
 
                 # loop on squares between the king and the checking piece
-                for covering_row, covering_col in zip(
-                        range(king_row + increment_x, attacking_piece_square.get_row(), increment_x),
-                        range(king_col + increment_y, attacking_piece_square.get_col(), increment_y)):
-                    covering_square = self.get_square(covering_row, covering_col)
-                    # if current piece can cover the check
-                    if self.can_attack(initial_square, covering_square, consider_in_between_pieces=True):
-                        valid_move = Move(initial_square, covering_square)
-                        check_valid_moves.append(valid_move)
+                if increment_x != 0 and increment_y != 0:
+                    for covering_row, covering_col in zip(
+                            range(king_row + increment_x, attacking_piece_square.get_row(), increment_x),
+                            range(king_col + increment_y, attacking_piece_square.get_col(), increment_y)):
+                        covering_square = self.get_square(covering_row, covering_col)
+                        # if current piece can cover the check
+                        if piece.__class__.can_reach(self, initial_square, covering_square):
+                            valid_move = Move(initial_square, covering_square)
+                            check_valid_moves.append(valid_move)
+                elif increment_x == 0:
+                    covering_row = checked_king_square.get_row()
+
+                    for covering_col in range(king_col + increment_y, attacking_piece_square.get_col(), increment_y):
+                        covering_square = self.get_square(covering_row, covering_col)
+                        # if current piece can cover the check
+                        if piece.__class__.can_reach(self, initial_square, covering_square):
+                            valid_move = Move(initial_square, covering_square)
+                            check_valid_moves.append(valid_move)
+                elif increment_y == 0:
+                    covering_col = checked_king_square.get_col()
+
+                    for covering_row in range(king_row + increment_x, attacking_piece_square.get_row(), increment_x):
+                        covering_square = self.get_square(covering_row, covering_col)
+                        # if current piece can cover the check
+                        if piece.__class__.can_reach(self, initial_square, covering_square):
+                            valid_move = Move(initial_square, covering_square)
+                            check_valid_moves.append(valid_move)
 
         # 2) kill the checking piece (not available in case of double checks)
         if len(self.checking_pieces_squares) == 1:
@@ -319,12 +288,13 @@ class Board:
             # loop through all pieces and check if any piece can attack the attacking piece
             pieces_squares = self.get_pieces_squares(checked_king.get_color())
             for cur_square in pieces_squares:
-                if self.can_attack(cur_square, attacking_piece_square, consider_in_between_pieces=True):
+                piece = cur_square.get_piece()
+                if piece.__class__.can_attack(self, cur_square, attacking_piece_square):
                     valid_move = Move(cur_square, attacking_piece_square)
                     check_valid_moves.append(valid_move)
 
         # 3) move the king to safety
-        check_valid_moves += self.get_king_valid_moves(king_row, king_col)
+        check_valid_moves += King.calculate_valid_moves(board=self, initial_square=checked_king_square)
 
         return check_valid_moves
 
@@ -349,22 +319,36 @@ class Board:
                 row = x
                 col = y
                 while self.in_board(row, col):
-                    cur_piece = self.get_square(row, col).get_piece()
+                    cur_square = self.get_square(row, col)
+                    cur_piece = cur_square.get_piece()
 
                     if cur_piece is not None:
-                        if not isinstance(cur_piece, King):
+                        if not (isinstance(cur_piece, King) and cur_piece.get_color() == king.get_color()):
                             if cur_piece.get_color() == king.get_color():
                                 covering_pieces.append(cur_piece)
                             else:
-                                if self.can_attack(self.get_square(row, col), king_square, False):
-                                    if len(covering_pieces) == 1:
-                                        pinned_piece = covering_pieces[0]
-                                        self.pinned_pieces.append(pinned_piece)
-                                        pinned_piece.set_pin((row_increment, col_increment))
-                                    elif len(covering_pieces) == 0:
-                                        # check
-                                        checks_count += 1
-                                        self.checking_pieces_squares.append(self.get_square(row, col))
+                                self.board_direction *= -1
+                                if isinstance(cur_piece, Pawn):
+                                    if Pawn.can_attack(self, cur_square, king_square):
+                                        if len(covering_pieces) == 1:
+                                            pinned_piece = covering_pieces[0]
+                                            self.pinned_pieces.append(pinned_piece)
+                                            pinned_piece.set_pin((row_increment, col_increment))
+                                        elif len(covering_pieces) == 0:
+                                            # check
+                                            checks_count += 1
+                                            self.checking_pieces_squares.append(cur_square)
+                                else:
+                                    if cur_piece.__class__.can_reach(self, cur_square, king_square, False):
+                                        if len(covering_pieces) == 1:
+                                            pinned_piece = covering_pieces[0]
+                                            self.pinned_pieces.append(pinned_piece)
+                                            pinned_piece.set_pin((row_increment, col_increment))
+                                        elif len(covering_pieces) == 0:
+                                            # check
+                                            checks_count += 1
+                                            self.checking_pieces_squares.append(cur_square)
+                                self.board_direction *= -1
 
                                 break
 
@@ -382,13 +366,13 @@ class Board:
                     continue
                 if self.get_square(x + row, y + col).get_piece().get_color() == king.get_color():
                     continue
-
-                if self.can_attack(self.get_square(x + row, y + col), self.get_square(x, y), False):
+                if isinstance(self.get_square(x + row, y + col).get_piece(), Knight):
                     # check
                     checks_count += 1
                     self.checking_pieces_squares.append(self.get_square(x + row, y + col))
 
         self.checks_count = checks_count
+        return checks_count
 
     def check_inbetween_pieces(self, initial_square, final_square):
         """ Determine if there are any pieces between the pieces in the initial position and the final position """
@@ -421,62 +405,6 @@ class Board:
                                 range(initial_square.get_col() + increment_y, final_square.get_col(), increment_y)):
                 if self.get_square(row, col).get_piece() is not None:
                     return True
-
-        return False
-
-    def can_attack(self, initial_square, final_square, consider_in_between_pieces=True):
-        """ Determine if the piece in the initial square can attack the piece in the final square """
-
-        if initial_square is None or final_square is None:
-            return False
-
-        x = final_square.get_row() - initial_square.get_row()
-        y = final_square.get_col() - initial_square.get_col()
-        attacking_piece = initial_square.get_piece()
-
-        if x == 0 and y == 0:
-            return False
-        if attacking_piece is None:
-            return False
-
-        # has to be set to determine if the attacked_piece can go to this square or not
-        if isinstance(attacking_piece, King):
-            pass
-
-        if isinstance(attacking_piece, Bishop) and abs(x) == abs(y):
-            return True if not consider_in_between_pieces \
-                else not self.check_inbetween_pieces(initial_square, final_square)
-
-        if isinstance(attacking_piece, Rook) and (x == 0 or y == 0):
-            return True if not consider_in_between_pieces \
-                else not self.check_inbetween_pieces(initial_square, final_square)
-
-        if isinstance(attacking_piece, Queen) and (abs(x) == abs(y) or (x == 0 or y == 0)):
-            return True if not consider_in_between_pieces \
-                else not self.check_inbetween_pieces(initial_square, final_square)
-
-        if isinstance(attacking_piece, Knight) and (x != 0 and y != 0) and (abs(x) + abs(y) == 3):
-            return True
-
-        x1 = initial_square.get_row()
-        y1 = initial_square.get_col()
-
-        x2 = final_square.get_row()
-        y2 = final_square.get_col()
-
-        if isinstance(attacking_piece, Pawn):
-            if x1 + self.board_direction == x2 and (y1 + 1 == y2 or y1 - 1 == y2):
-                if final_square.get_piece() is not None \
-                        and final_square.get_piece().get_color() != attacking_piece.get_color():
-                    return True
-            elif y1 == y2 and x2 - x1 == self.board_direction:
-                if final_square.get_piece() is None:
-                    return True if not consider_in_between_pieces \
-                        else not self.check_inbetween_pieces(initial_square, final_square)
-            elif y1 == y2 and x2 - x1 == self.board_direction * 2:
-                if final_square.get_piece() is None:
-                    return True if not consider_in_between_pieces \
-                        else not self.check_inbetween_pieces(initial_square, final_square)
 
         return False
 
