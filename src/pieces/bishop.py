@@ -11,9 +11,15 @@ class Bishop(Piece):
         can_reach = False
         diff_x = final_square.get_row() - initial_square.get_row()
         diff_y = final_square.get_col() - initial_square.get_col()
+        piece = initial_square.get_piece()
+
+        direction_tuple = (board.get_sign(diff_x), board.get_sign(diff_y))
+        reverse_direction_tuple = (-board.get_sign(diff_x), -board.get_sign(diff_y))
 
         if abs(diff_x) == abs(diff_y):
-            can_reach = True
+            if not piece.is_pinned or piece.get_pin_direction() == direction_tuple \
+                    or piece.get_pin_direction() == reverse_direction_tuple:
+                can_reach = True
 
             if consider_in_between_pieces:
                 can_reach = not board.check_inbetween_pieces(initial_square, final_square)
