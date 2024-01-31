@@ -9,16 +9,20 @@ from boards.move import Move
 
 
 class Board:
-    def __init__(self):
+    def __init__(self, game_id):
         temp_square = Square(-1, -1, "white", "white")
 
+        self.game_id = game_id
+        self.is_ready = False
+        self.is_game_running = False
         self.pinned_pieces = []
-        self.board_direction = -1
+        self.board_direction = 1
         self.checking_pieces_squares = []
-        self.is_white_turn = True
+        self.is_white_turn = False
         self.checks_count = 0
         self.last_move = Move(temp_square, temp_square)
         self.squares = [[temp_square] * 8 for _ in range(8)]
+        self.valid_moves = []
 
         for i in range(8):
             for j in range(8):
@@ -45,6 +49,8 @@ class Board:
 
         self.white_king_square = self.get_square(7, 4)
         self.black_king_square = self.get_square(0, 4)
+
+        self.update_board_state()
 
     def add_piece(self, piece, x, y):
         self.squares[x][y].add_piece(piece)
@@ -129,8 +135,8 @@ class Board:
         rook_final_square.add_piece(rook)
 
     def execute_move(self, move):
-        initial_square = move.get_initial_square()
-        final_square = move.get_final_square()
+        initial_square = self.get_square(move.get_initial_square().get_row(), move.get_initial_square().get_col())
+        final_square = self.get_square(move.get_final_square().get_row(), move.get_final_square().get_col())
         piece = initial_square.get_piece()
         initial_square.remove_piece()
         old_piece = final_square.get_piece()
@@ -160,6 +166,46 @@ class Board:
                 self.black_king_square = final_square
 
         self.last_move = move
+
+    def check_move_validity(self, move):
+        for valid_move in self.valid_moves:
+            if move == valid_move:
+                return True
+
+        return False
+
+    def update_board_state(self):
+        # clear the state
+        self.checking_pieces_squares.clear()
+        self.flip_turn()
+        self.flip_board_direction()
+        for pinned_piece in self.pinned_pieces:
+            pinned_piece.clear_pins()
+        self.pinned_pieces.clear()
+
+        # calculate the new state
+        checks_count = self.count_checks()
+        print("checks count", checks_count)
+        valid_moves_num = 0
+
+        pieces_squares = self.get_pieces_squares("white" if self.is_white_turn else "black")
+        for piece_square in pieces_squares:
+            piece = piece_square.get_piece()
+            piece_valid_moves = self.get_valid_moves(piece_square)
+            for move in piece_valid_moves:
+                print(move.get_initial_square().get_piece())
+            self.valid_moves += piece_valid_moves
+            piece.set_valid_moves(piece_valid_moves)
+            valid_moves_num += len(piece_valid_moves)
+
+        print(valid_moves_num)
+
+        if self.checks_count > 0 and valid_moves_num == 0:
+            self.is_game_running = False
+            print("Game Ended by Checkmate")
+        elif self.checks_count == valid_moves_num == 0:
+            self.is_game_running = False
+            print("Game Ended by Stalemate")
 
     def get_valid_moves(self, initial_square):
         """ Get the list of valid moves of the given square """
@@ -407,12 +453,3 @@ class Board:
                     return True
 
         return False
-
-    def update_board_state(self):
-        self.checking_pieces_squares.clear()
-        self.flip_turn()
-        self.flip_board_direction()
-
-        for pinned_piece in self.pinned_pieces:
-            pinned_piece.clear_pins()
-        self.pinned_pieces.clear()

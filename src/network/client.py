@@ -1,7 +1,8 @@
 from game import Game
-from network.network import Network
+from network import Network
 
-if __name__ == '__main__':
+
+def main():
     print("Hello Chess!")
 
     network = Network()
@@ -10,8 +11,12 @@ if __name__ == '__main__':
         board = network.send_and_receive("get")
 
         if board:
-            print("found a board")
+            print("found a board: ", board)
             game = Game(board, network)
             game.run_game()
+            break
 
     print('done')
+
+
+main()
