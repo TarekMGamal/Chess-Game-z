@@ -14,4 +14,4 @@ if __name__ == '__main__':
             game = Game(board, network)
             game.run_game()
 
-    print('done')
+        print('done')

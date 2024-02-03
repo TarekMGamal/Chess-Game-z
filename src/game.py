@@ -1,5 +1,4 @@
 import socket
-
 import pygame as p
 import sys
 from boards.move import Move
@@ -12,7 +11,7 @@ def load_image(image_name):
 
 
 class Game:
-    def __init__(self, board, network):
+    def __init__(self, board, mode, network):
         p.init()
         print("a new game object is created")
 
@@ -31,6 +30,7 @@ class Game:
         self.valid_moves = []
         self.is_white = network.get_is_white()
         self.player_id = network.get_player()
+        self.mode = mode
 
     def update_board(self, board):
         self.board = board
@@ -109,14 +109,6 @@ class Game:
     def check_selected_square_validity(self, selected_square):
         current_color = "white" if self.board.is_white_turn else "black"
 
-        if selected_square.get_piece() is None:
-            print("selected square is empty")
-        elif selected_square.get_piece().get_color() is not current_color:
-            print("opposite color piece selected")
-            print(selected_square.get_piece())
-            print(selected_square.get_piece().get_color())
-            print(current_color)
-
         if selected_square.get_piece() is None or selected_square.get_piece().get_color() != current_color:
             return False
         else:
@@ -139,10 +131,8 @@ class Game:
                 self.selected_squares.clear()
             else:
                 # highlight valid moves
-                print("highlight valid moves")
                 piece = selected_square.get_piece()
                 self.valid_moves = piece.get_valid_moves()
-                print("self.valid_moves: ", self.valid_moves)
                 self.highlight_valid_moves(selected_square)
         elif len(self.selected_squares) == 2:
             # final square selection
@@ -155,19 +145,30 @@ class Game:
                 move = Move(initial_square, final_square)
                 move = self.get_valid_move(move)
 
-                # send the move to the server and the server will execute the move and return the new board state
-                try:
-                    new_board = self.network.send_and_receive(move)
-                    self.board = new_board
+                if self.mode == "online":
+                    # send the move to the server and the server will execute the move and return the new board state
+                    try:
+                        new_board = self.network.send_and_receive(move)
+                        self.board = new_board
 
-                    # update board graphics
-                    self.draw_board()
-                    self.draw_pieces()
-                    self.clock.tick(self.max_fps)
-                    p.display.flip()
-                    print("move sent and board received")
-                except socket.error as e:
-                    print("an error occurred: ", e)
+                        # update board graphics
+                        self.draw_board()
+                        self.draw_pieces()
+                        self.clock.tick(self.max_fps)
+                        p.display.flip()
+                        print("move sent and board received")
+                    except socket.error as e:
+                        print("an error occurred: ", e)
+                elif self.mode == "pvp":
+                    if self.board.check_move_validity(move):
+                        self.board.execute_move(move)
+                        self.board.update_board_state()
+                elif self.mode == "ai":
+                    print("ai mode is not available yet")
+                    pass
+                else:
+                    print("mode ", self.mode, " is not supported")
+                    pass
 
             # if the move is executed or the two selected squares are invalid
             self.clear_valid_moves_highlight(initial_square)
@@ -186,6 +187,9 @@ class Game:
                     self.is_game_running = False
                 elif e.type == p.MOUSEBUTTONDOWN:
                     # check for the turns
+                    if self.mode == "pvp":
+                        self.is_white = self.board.is_white_turn
+
                     if self.board.is_white_turn == self.is_white:
                         self.handle_mouse_press()
                     else:
@@ -200,19 +204,20 @@ class Game:
             self.clock.tick(self.max_fps)
             p.display.flip()
 
-            if self.board.is_white_turn == self.is_white:
-                pass
-            else:
-                # update board state
-                try:
-                    new_board = self.network.send_and_receive("get")
-                    self.board = new_board
+            if self.mode == "online":
+                if self.board.is_white_turn == self.is_white:
+                    pass
+                else:
+                    # update board state
+                    try:
+                        new_board = self.network.send_and_receive("get")
+                        self.board = new_board
 
-                    # update board graphics
-                    self.draw_board()
-                    self.draw_pieces()
-                    self.clock.tick(self.max_fps)
-                    p.display.flip()
-                    # print("board received")
-                except socket.error as e:
-                    print("an error occurred: ", e)
+                        # update board graphics
+                        self.draw_board()
+                        self.draw_pieces()
+                        self.clock.tick(self.max_fps)
+                        p.display.flip()
+                        # print("board received")
+                    except socket.error as e:
+                        print("an error occurred: ", e)

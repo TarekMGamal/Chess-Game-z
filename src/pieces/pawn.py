@@ -53,8 +53,8 @@ class Pawn(Piece):
         last_move_final_square_y = board.last_move.get_final_square().get_col()
 
         if board.last_move is not None:
-            if board.last_move.get_final_square().get_piece() is not None:
-                if board.last_move.get_final_square().get_piece().get_name() == 'pawn':
+            if board.last_move.get_initial_square().get_piece() is not None:
+                if isinstance(board.last_move.get_initial_square().get_piece(), Pawn):
                     if last_move_final_square_x == initial_square.get_row():
                         if abs(last_move_final_square_y - initial_square.get_col()) == 1:
                             if abs(board.last_move.get_initial_square().get_row() - last_move_final_square_x) == 2:
@@ -88,8 +88,8 @@ class Pawn(Piece):
         last_move_final_square_y = board.last_move.get_final_square().get_col()
 
         if board.last_move is not None:
-            if board.last_move.get_final_square().get_piece() is not None:
-                if board.last_move.get_final_square().get_piece().get_name() == 'pawn':
+            if board.last_move.get_initial_square().get_piece() is not None:
+                if board.last_move.get_initial_square().get_piece().get_name() == 'pawn':
                     if last_move_final_square_x == initial_square.get_row():
                         if abs(last_move_final_square_y - initial_square.get_col()) == 1:
                             if abs(board.last_move.get_initial_square().get_row() - last_move_final_square_x) == 2:
@@ -130,8 +130,8 @@ class Pawn(Piece):
         last_move_final_square_y = board.last_move.get_final_square().get_col()
 
         if board.last_move is not None:
-            if board.last_move.get_final_square().get_piece() is not None:
-                if board.last_move.get_final_square().get_piece().get_name() == 'pawn':
+            if board.last_move.get_initial_square().get_piece() is not None:
+                if board.last_move.get_initial_square().get_piece().get_name() == 'pawn':
                     if last_move_final_square_x == initial_square.get_row():
                         if abs(last_move_final_square_y - initial_square.get_col()) == 1:
                             if abs(board.last_move.get_initial_square().get_row() - last_move_final_square_x) == 2:
@@ -207,10 +207,10 @@ class Pawn(Piece):
         last_move_final_square_y = board.last_move.get_final_square().get_col()
 
         if board.last_move is not None:
-            if board.last_move.get_final_square().get_piece() is not None:
-                if board.last_move.get_final_square().get_piece().get_name() == 'pawn':
-                    if last_move_final_square_x == x:
-                        if last_move_final_square_y == y + 1 or last_move_final_square_y == y - 1:
+            if board.last_move.get_initial_square().get_piece() is not None:
+                if isinstance(board.last_move.get_initial_square().get_piece(), Pawn):
+                    if last_move_final_square_x == initial_square.get_row():
+                        if abs(last_move_final_square_y - initial_square.get_col()) == 1:
                             if abs(board.last_move.get_initial_square().get_row() - last_move_final_square_x) == 2:
                                 final_square = board.get_square(initial_square.get_row() + board.get_board_direction(),
                                                                 last_move_final_square_y)
