@@ -5,8 +5,8 @@ from boards.board import Board
 from boards.move import Move
 import random
 
-server = "192.168.1.101"
-port = 5555
+server = ""
+port = 80
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 id_count = 0
 connected = set()

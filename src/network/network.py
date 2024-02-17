@@ -6,8 +6,8 @@ import random
 class Network:
     def __init__(self, is_dummy=False):
         self.is_dummy = is_dummy
-        self.server = "192.168.1.101"
-        self.port = 5555
+        self.server = ""
+        self.port = 80
         self.address = (self.server, self.port)
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.player, self.is_white = self.connect()
