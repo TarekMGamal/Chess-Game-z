@@ -1,8 +1,9 @@
 import pygame
+import asyncio
 from graphics.button import Button
 from game import Game
 from boards.board import Board
-from src.network.network import Network
+from network.network import Network
 
 
 class Menu:
@@ -24,7 +25,7 @@ class Menu:
 
         pygame.display.update()
 
-    def menu_screen(self):
+    async def menu_screen(self):
         run = True
         clock = pygame.time.Clock()
 
@@ -71,3 +72,4 @@ class Menu:
                 elif event.type == pygame.VIDEORESIZE:
                     width, height = event.size
                     self.window = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+            await asyncio.sleep(0)

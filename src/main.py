@@ -1,17 +1,10 @@
-from game import Game
-from network.network import Network
+from network.client import main
+import asyncio
+
 
 if __name__ == '__main__':
     print("Hello Chess!")
 
-    network = Network()
+    main()
 
-    while True:
-        board = network.send_and_receive("get")
-
-        if board:
-            print("found a board")
-            game = Game(board, network)
-            game.run_game()
-
-        print('done')
+    print("Done Chess")
